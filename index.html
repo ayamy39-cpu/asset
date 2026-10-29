@@ -33,7 +33,7 @@ button,input,select{font:inherit;color:inherit}
 .gate h1{margin:0;font-size:24px;font-weight:700;letter-spacing:-.02em}
 .gate p{margin:4px 0 0;color:var(--sub);font-size:14px}
 .pw{display:flex;gap:8px}
-.pw input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;font-size:17px;letter-spacing:.2em;background:var(--bg)}
+.pw input{flex:1;min-width:0;border:1px solid var(--line-2);border-radius:10px;padding:12px 14px;font-size:17px;letter-spacing:.08em;background:var(--bg)}
 .pw input:focus{border-color:var(--accent);outline:none}
 .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:12px 18px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn:disabled{opacity:.5}
@@ -173,7 +173,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   <form id="gateForm" autocomplete="off">
     <div class="mark" aria-hidden="true">03</div>
     <div><h1>우리집 대시보드</h1><p>자산 관리 · 부동산 · 비밀번호를 입력하세요</p></div>
-    <div class="pw"><input type="password" id="pw" inputmode="numeric" autocomplete="current-password" aria-label="비밀번호" required autofocus><button class="btn" id="go" type="submit">열기</button></div>
+    <div class="pw"><input type="password" id="pw" autocomplete="current-password" autocapitalize="off" spellcheck="false" aria-label="비밀번호" required autofocus><button class="btn" id="go" type="submit">열기</button></div>
     <label class="chk"><input type="checkbox" id="remember">이 기기에서 기억하기</label>
     <p class="err" id="err" role="alert"></p>
   </form>
@@ -517,7 +517,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   async function getPayload() { if (!payload) { const r = await fetch("data.enc.json?t=" + Date.now(), { cache: "no-store" }); if (!r.ok) throw new Error("load"); payload = await r.json(); } return payload; }
   async function decrypt(pw) {
     const p = await getPayload();
-    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(pw).normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
     const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(p.salt), iterations: p.iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["decrypt"]);
     return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(p.iv) }, key, b64(p.ct))));
   }
