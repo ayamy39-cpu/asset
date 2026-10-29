@@ -7,11 +7,11 @@
 <title>우리집 자산 대시보드</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css">
 <style>
-/* 밝고 미니멀: 흰 바탕 + 포인트 컬러 하나(숲색). 카드 대신 여백과 가는 선으로 구획한다. */
+/* 밝고 미니멀: 흰 바탕 + 포인트 컬러 하나(주황). 카드 대신 여백과 가는 선으로 구획한다. */
 :root{
   --bg:#ffffff; --tint:#f6f7f5; --line:#e7e8e4; --line-2:#d5d7d1;
   --ink:#141613; --sub:#5f645c; --faint:#9a9e96;
-  --accent:#16795c; --accent-soft:#e8f3ee;
+  --accent:#f2600c; --accent-ink:#c2410c; --accent-soft:#fff1e8; --ok:#16795c; --ok-soft:#e8f3ee;
   --up:#d1372a; --down:#2457c5;
   --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   color-scheme:light;
@@ -37,7 +37,7 @@ button,input,select{font:inherit;color:inherit}
 .pw input:focus{border-color:var(--accent);outline:none}
 .btn{border:0;background:var(--accent);color:#fff;border-radius:10px;padding:12px 18px;font-weight:600;cursor:pointer;white-space:nowrap}
 .btn:disabled{opacity:.5}
-.btn.line{background:transparent;color:var(--accent);border:1px solid var(--line-2);padding:8px 14px;font-size:14px}
+.btn.line{background:transparent;color:var(--accent-ink);border:1px solid var(--line-2);padding:8px 14px;font-size:14px}
 .chk{display:flex;gap:8px;align-items:center;color:var(--sub);font-size:14px}
 .err{color:var(--up);font-size:13.5px;min-height:1.4em;margin:0}
 
@@ -134,8 +134,8 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .verdict{padding:18px 20px;border-radius:12px;background:var(--tint)}
 .verdict b{display:block;font-size:20px;letter-spacing:-.02em}
 .verdict span{color:var(--sub);font-size:14px}
-.verdict.ok{background:var(--accent-soft)}
-.verdict.ok b{color:var(--accent)}
+.verdict.ok{background:var(--ok-soft)}
+.verdict.ok b{color:var(--ok)}
 .verdict.short{background:#fdeeec}
 .verdict.short b{color:var(--up)}
 .limits{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin-top:18px;border-top:1px solid var(--line)}
@@ -143,8 +143,8 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .lm+.lm{padding-left:12px;border-left:1px solid var(--line)}
 .lm .k{font-size:12px;color:var(--faint)}
 .lm .v{font-weight:700}
-.lm.bind .v{color:var(--accent)}
-.lm.bind .k::after{content:" · 한도 결정";color:var(--accent)}
+.lm.bind .v{color:var(--accent-ink)}
+.lm.bind .k::after{content:" · 한도 결정";color:var(--accent-ink)}
 @media (max-width:560px){.limits{grid-template-columns:minmax(0,1fr)}.lm+.lm{padding-left:0;border-left:0;border-top:1px solid var(--line)}}
 .ledger{margin-top:18px;font-size:14px}
 .li{display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--line)}
@@ -473,7 +473,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   $("#debts").addEventListener("click", e => { const i = e.target.dataset.rm; if (i == null) return; const f = readFin(); f.debts.splice(+i, 1); renderDebts(f.debts); save(); });
 
   // ---- asset tab ----
-  const CAT_C = ["#16795c","#4f9d80","#8cc3ac","#c9e2d6","#b8b0a0","#7d776b","#d9d2c3"];
+  const CAT_C = ["#f2600c","#f7924f","#fbbf91","#fde0c8","#b8b0a0","#7d776b","#d9d2c3"];
   function renderAsset() {
     const A = S.asset, box = $("#assetBody");
     if (!A || !(A.items || []).length) {
