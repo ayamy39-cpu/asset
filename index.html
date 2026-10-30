@@ -507,14 +507,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   function renderAsset() {
     const A = S.asset, box = $("#assetBody");
     if (!A || !(A.accounts || []).length) { $("#aTotal").textContent = "–"; $("#aTotalSub").textContent = "노션 자산 데이터 연결 대기"; box.innerHTML = ""; return; }
-    const accs = A.accounts.filter(a => a.balance), stocks = A.stocks || [];
+    const accs = A.accounts.filter(a => a.balance), stocks = [];
     const dep = accs.reduce((s, a) => s + a.balance, 0), stk = stocks.reduce((s, x) => s + (x.value || 0), 0), tot = dep + stk;
     const avail = accs.filter(a => a.avail === "Y").reduce((s, a) => s + a.balance, 0) + stk;
     const W = v => won(v / 10000); // 원 → 만원 표기
     $("#aTotal").innerHTML = esc(W(tot)) + "<small>원</small>";
-    $("#aTotalSub").textContent = `${fd(A.asOf)} 기준 · 통장 ${accs.length}개 · 주식 ${stocks.filter(x => x.value).length}종목`;
+    $("#aTotalSub").textContent = `${fd(A.asOf)} 기준 · 통장 ${accs.length}개`;
     const owners = {}; accs.forEach(a => owners[a.owner || "기타"] = (owners[a.owner || "기타"] || 0) + a.balance);
-    $("#aSplit").innerHTML = `<div class="r2"><span>예·적금</span><b class="num">${W(dep)}</b></div><div class="r2"><span>주식</span><b class="num">${W(stk)}</b></div>`
+    $("#aSplit").innerHTML = `<div class="r2"><span>예·적금</span><b class="num">${W(dep)}</b></div>`
       + Object.entries(owners).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r2"><span>└ ${esc(k)} 명의</span><span class="num">${W(v)}</span></div>`).join("")
       + `<div class="availbar"><span style="width:${(avail / tot * 100).toFixed(1)}%"></span><span style="flex:1"></span></div><div class="meta" style="margin:0">바로 쓸 수 있는 돈 <b class="num" style="color:var(--ink)">${W(avail)}</b> · 묶인 돈 ${W(tot - avail)}</div>`;
     const Y = A.yearly || [], ly = Y[Y.length - 1];
@@ -533,7 +533,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         ${F.length ? `<div class="ftot"><span>월 합계</span><span class="num">${ft ? W(ft) + "원" : "–"}${miss ? ` <span style="color:var(--faint);font-weight:500;font-size:13px">(${miss}개 금액 미입력)</span>` : ""}</span></div>` : ""}</section>
       <section><div class="sh"><h2>통장별 잔액</h2><span class="src">잔액이 0인 통장은 숨김</span></div><div class="tw"><table><thead><tr><th>통장</th><th>금융사</th><th>명의</th><th>가용</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div></section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
-      ${(A.notes || []).length ? `<p class="note" style="padding-bottom:8px">${A.notes.map(esc).join(" · ")}</p>` : ""}`;
+      ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
   }
   const shortWon = v => (v > 0 ? "+" : v < 0 ? "-" : "") + (Math.abs(v) >= 1e8 ? (Math.abs(v) / 1e8).toFixed(2).replace(/\.?0+$/, "") + "억" : Math.round(Math.abs(v) / 1e4).toLocaleString("ko-KR") + "만");
   function yearBars(svg, Y) {
