@@ -205,6 +205,16 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .fitem .num{color:var(--ink)}
 .fitem .miss{color:var(--faint);font-size:13px}
 table.acct td{padding-top:10px;padding-bottom:10px}
+table.acct tr.agrp .an small{color:var(--faint);font-weight:500;font-size:12.5px;margin-left:4px}
+table.acct tr.agrp{cursor:pointer}
+table.acct tr.agrp:hover td{background:var(--accent-soft)}
+table.acct tr.agrp.open td{border-bottom:0}
+table.acct .chev{display:inline-block;width:14px;color:var(--accent);font-weight:700;transition:transform .15s}
+table.acct tr.agrp.open .chev{transform:rotate(90deg)}
+table.acct tr.asub td{background:#fcfaf8}
+table.acct tr.asub td{padding-top:6px;padding-bottom:6px;color:var(--sub);font-size:13.5px}
+table.acct tr.asub td:first-child{padding-left:30px}
+table.acct tr.asub .an{font-weight:500}
 .an{font-weight:600;color:var(--ink)} .ab{color:var(--faint);font-size:12px}
 footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--faint);font-size:12.5px;display:grid;gap:4px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
@@ -541,6 +551,9 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   $("#debts").addEventListener("click", e => { const i = e.target.dataset.rm; if (i == null) return; const f = readFin(); f.debts.splice(+i, 1); renderDebts(f.debts); save(); });
 
   // ---- asset tab ----
+  const OPEN_G = new Set();
+  document.addEventListener("click", e => { const r = e.target.closest("tr.agrp"); if (!r) return; const g = r.dataset.g; OPEN_G.has(g) ? OPEN_G.delete(g) : OPEN_G.add(g); renderAsset(); });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.agrp")) { e.preventDefault(); e.target.click(); } });
   function renderAsset() {
     const A = S.asset, box = $("#assetBody");
     if (!A || !(A.accounts || []).length) { $("#aTotal").textContent = "–"; $("#aTotalSub").textContent = "노션 자산 데이터 연결 대기"; box.innerHTML = ""; return; }
@@ -563,7 +576,15 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
     const st = $("#aStale"); st.hidden = days < 45; st.textContent = `노션 저축 기록이 ${fd(A.asOf)} 이후 업데이트되지 않았어요. 노션에 기록을 이어서 입력하면 다음 날 아침 자동으로 반영돼요.`;
     const F = A.fixed || [], ft = F.reduce((s, f) => s + (f.amount || 0), 0), miss = F.filter(f => f.amount == null).length;
-    const accRows = accs.map(a => `<tr><td><div class="an">${esc(a.name)}</div><div class="ab">${esc(a.bank || "")}${a.avail === "Y" ? " · 바로 사용" : ""}</div></td><td>${esc(a.owner || "")}</td><td class="r num"><b>${W(a.balance)}</b></td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`).join("");
+    const accRow = (a, nm, sub, gi) => `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(nm)}</div><div class="ab">${esc(a.bank || "")}${a.avail === "Y" ? " · 바로 사용" : ""}</div></td><td>${esc(a.owner || "")}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`;
+    const AG = {}; accs.forEach(a => { const n = (a.name || "").replace(/\\_/g, "_"), i = n.indexOf("_"); const g = i > 0 ? n.slice(0, i).trim() : null; const k = g ? "g:" + g : "s:" + n; (AG[k] ||= { g, items: [] }).items.push({ a, sub: g ? n.slice(i + 1).trim() : n }); });
+    const accRows = Object.values(AG).map(x => ({ ...x, sum: x.items.reduce((s, y) => s + y.a.balance, 0) })).sort((p, q) => q.sum - p.sum).map(x => {
+      if (!x.g) return accRow(x.items[0].a, x.items[0].sub, false);
+      const gi = x.g, op = OPEN_G.has(gi);
+      const ow = [...new Set(x.items.map(y => y.a.owner).filter(Boolean))].join(", ");
+      return `<tr class="agrp${op ? " open" : ""}" data-g="${esc(gi)}" tabindex="0" aria-expanded="${op}"><td><div class="an"><span class="chev">›</span>${esc(x.g)} <small>${x.items.length}개 · ${op ? "접기" : "상세 보기"}</small></div></td><td>${esc(ow)}</td><td class="r num"><b>${W(x.sum)}</b></td><td class="r num" style="color:var(--faint)">${(x.sum / tot * 100).toFixed(1)}%</td></tr>`
+        + x.items.sort((p, q) => q.a.balance - p.a.balance).map(y => accRow(y.a, y.sub, true, esc(gi))).join("");
+    }).join("");
     const stRows = stocks.map(x => { const pl = x.buy ? (x.price - x.buy) / x.buy * 100 : null; return `<tr><td>${esc(x.name)}</td><td class="r num">${x.qty}주</td><td class="r num">${x.buy ? Number(x.buy).toLocaleString("ko-KR") : "–"}</td><td class="r num">${x.price ? Number(x.price).toLocaleString("ko-KR") : "–"}</td><td class="r num ${pl > 0 ? "up" : pl < 0 ? "down" : ""}">${pl == null ? "–" : (pl > 0 ? "+" : "") + pl.toFixed(1) + "%"}</td><td class="r num">${W(x.value)}</td></tr>`; }).join("");
     const G = {}; F.forEach(f => (G[f.category || "기타"] ||= []).push(f));
     const GL = Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]);
