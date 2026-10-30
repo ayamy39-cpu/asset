@@ -109,6 +109,11 @@ tr.first td{font-weight:600}
 
 /* gap */
 .gaps{display:grid;gap:18px}
+.tadd{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,2fr) auto;gap:10px;align-items:end;margin-top:4px}
+@media (max-width:720px){.tadd{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.tadd .btn,.tadd label:nth-child(3){grid-column:1/-1}}
+.tadd input{width:100%;border:1px solid var(--line-2);border-radius:8px;padding:9px 11px;background:var(--bg)}
+.tadd input:focus{border-color:var(--accent);outline:none}
+.trow .del{background:none;border:0;color:var(--faint);font-size:12.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:2px 0}
 .grow{display:grid;grid-template-columns:minmax(0,220px) minmax(0,1fr) minmax(0,120px);gap:16px;align-items:center}
 .grow .n{font-weight:600}
 .grow .h{color:var(--faint);font-size:12.5px}
@@ -276,8 +281,15 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   </section>
 
   <section id="targets">
-    <div class="sh"><h2>가고 싶은 단지 <span class="num" style="color:var(--faint);font-weight:500" id="tCount"></span></h2><span class="src">추가·변경은 Claude에게 요청</span></div>
+    <div class="sh"><h2>가고 싶은 단지 <span class="num" style="color:var(--faint);font-weight:500" id="tCount"></span></h2><span class="src">최대 5개 · 등록하면 다음 날 아침 반영</span></div>
     <div class="tlist" id="tList"></div>
+    <form class="tadd" id="tAdd" autocomplete="off">
+      <label class="f">단지 이름<input type="text" id="tName" placeholder="예: 정자동 느티마을 3단지" required maxlength="60"></label>
+      <label class="f">평형<input type="text" id="tPy" placeholder="예: 33평" required maxlength="20"></label>
+      <label class="f">주소 (선택)<input type="text" id="tAddr" placeholder="예: 성남시 분당구 정자일로 …" maxlength="100"></label>
+      <button class="btn" type="submit" id="tGo">등록 요청</button>
+    </form>
+    <p class="note" id="tMsg">"등록 요청"을 누르면 GitHub 요청 화면이 새 탭으로 열려요. 내용 확인 후 <b>Submit new issue</b>를 누르면 다음 날 아침 8:47 업데이트 때 반영돼요. 요청은 공개 저장소에 남으니 단지 이름 외의 정보는 적지 마세요.</p>
   </section>
 
   <section id="gap">
@@ -426,12 +438,23 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       return `<div class="trow"><div><h3>${esc(tg.name)} <span style="color:var(--faint);font-weight:500;font-size:14px">${esc(tg.pyeong)}</span></h3><div class="m">${esc(tg.address || "")}</div></div>
         <div><div class="k">최근 실거래</div><div class="v num">${tr ? won(tr.price) : "–"}</div><div class="k">${tr ? fd(tr.date) + (/직거래/.test(tr.source || "") ? " · 직거래" : "") : ""}</div></div>
         <div><div class="k">호가 범위</div><div class="v num">${ls && ls.min ? won(ls.min) + " ~ " + won(ls.max) : "–"}</div><div class="k">${ls ? (ls.pyCount ?? "–") + "건 · " + fd(ls.date) : ""}</div></div>
-        <div><div class="k">호가 평균</div><div class="v num">${ls ? won(ls.pyAvg || ls.avg) : "–"}</div></div></div>`;
-    }).join("") : `<div class="empty">등록된 관심 단지가 없어요. Claude에게 "OO단지 33평 관심 단지로 추가해줘"라고 말해 주세요.</div>`;
+        <div><div class="k">호가 평균</div><div class="v num">${ls ? won(ls.pyAvg || ls.avg) : "–"}</div><button type="button" class="del" data-del="${esc(tg.name)}|${esc(tg.pyeong)}">삭제 요청</button></div></div>`;
+    }).join("") : `<div class="empty">등록된 관심 단지가 없어요. 아래 칸에 단지 이름과 평형을 넣어 주세요.</div>`;
+    $("#tGo").disabled = S.targets.length >= 5;
     const sel = $("#fTarget"), cur = sel.value || S.fin?.targetId || "";
     sel.innerHTML = `<option value="">직접 입력</option>` + S.targets.map(t => `<option value="${esc(t.id)}">${esc(t.name)} ${esc(t.pyeong)}</option>`).join("");
     if (S.targets.some(t => t.id === cur)) sel.value = cur;
   }
+  const ISSUE = "https://github.com/ayamy39-cpu/asset/issues/new";
+  function openIssue(title, body) { const u = `${ISSUE}?title=${encodeURIComponent(title)}&body=${encodeURIComponent(body)}&labels=${encodeURIComponent("관심단지")}`; const w = window.open(u, "_blank", "noopener"); if (!w) location.href = u; }
+  $("#tAdd").addEventListener("submit", e => {
+    e.preventDefault();
+    if (S.targets.length >= 5) { $("#tMsg").textContent = "관심 단지는 최대 5개예요. 하나를 삭제 요청한 뒤 등록해 주세요."; return; }
+    const n = $("#tName").value.trim(), py = $("#tPy").value.trim(), ad = $("#tAddr").value.trim(); if (!n || !py) return;
+    openIssue(`관심 단지 추가: ${n} ${py}`, `단지: ${n}\n평형: ${py}\n주소: ${ad || "-"}\n\n(HOME 대시보드에서 보낸 요청이에요. Submit new issue를 누르면 다음 날 아침 반영돼요.)`);
+    $("#tMsg").textContent = `"${n} ${py}" 등록 요청 화면을 열었어요. GitHub에서 Submit new issue를 누르면 다음 날 아침 반영돼요.`; e.target.reset();
+  });
+  $("#tList").addEventListener("click", e => { const d = e.target.dataset.del; if (!d) return; const [n, py] = d.split("|"); openIssue(`관심 단지 삭제: ${n} ${py}`, `단지: ${n}\n평형: ${py}\n\n(HOME 대시보드에서 보낸 삭제 요청이에요.)`); });
   function renderGap() {
     const h = homeValue(); $("#homeBasis").textContent = h ? h.how : "–";
     const gs = gapList();
