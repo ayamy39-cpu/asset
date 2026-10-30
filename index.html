@@ -199,6 +199,14 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .fgroup{border-top:1px solid var(--line-2);padding-block:12px 4px}
 .fgroup+.fgroup{margin-top:6px}
 .fgh{display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-bottom:6px}
+.fgh[data-fg]{cursor:pointer;border-radius:6px}
+.fgh[data-fg]:hover{background:var(--accent-soft)}
+.fgroup:not(.open){padding-block:10px}
+.fgroup:not(.open) .fgh{padding-bottom:0}
+.fgroup+.fgroup:not(.open){margin-top:0}
+.fgroup.open .fitem{padding-left:26px}
+.fgh .chev{display:inline-block;width:14px;color:var(--accent);font-weight:700;transition:transform .15s}
+.fgroup.open .fgh .chev{transform:rotate(90deg)}
 .fgh small{color:var(--faint);font-weight:500;font-size:12.5px;margin-left:4px}
 .fitem{display:flex;justify-content:space-between;gap:12px;padding:7px 0 7px 12px;font-size:14px;color:var(--sub)}
 .fitem small{display:block;color:var(--faint);font-size:12px}
@@ -551,9 +559,12 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   $("#debts").addEventListener("click", e => { const i = e.target.dataset.rm; if (i == null) return; const f = readFin(); f.debts.splice(+i, 1); renderDebts(f.debts); save(); });
 
   // ---- asset tab ----
-  const OPEN_G = new Set();
-  document.addEventListener("click", e => { const r = e.target.closest("tr.agrp"); if (!r) return; const g = r.dataset.g; OPEN_G.has(g) ? OPEN_G.delete(g) : OPEN_G.add(g); renderAsset(); });
-  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.agrp")) { e.preventDefault(); e.target.click(); } });
+  const OPEN_G = new Set(), OPEN_F = new Set();
+  document.addEventListener("click", e => {
+    const r = e.target.closest("tr.agrp"); if (r) { const g = r.dataset.g; OPEN_G.has(g) ? OPEN_G.delete(g) : OPEN_G.add(g); return renderAsset(); }
+    const f = e.target.closest(".fgh[data-fg]"); if (f) { const g = f.dataset.fg; OPEN_F.has(g) ? OPEN_F.delete(g) : OPEN_F.add(g); renderAsset(); }
+  });
+  document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.agrp, .fgh[data-fg]")) { e.preventDefault(); e.target.click(); } });
   function renderAsset() {
     const A = S.asset, box = $("#assetBody");
     if (!A || !(A.accounts || []).length) { $("#aTotal").textContent = "–"; $("#aTotalSub").textContent = "노션 자산 데이터 연결 대기"; box.innerHTML = ""; return; }
@@ -589,7 +600,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const G = {}; F.forEach(f => (G[f.category || "기타"] ||= []).push(f));
     const GL = Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]);
     const CW = v => Number(Math.round(v)).toLocaleString("ko-KR") + "원";
-    const fixedHTML = F.length ? GL.map(([g, arr, sum]) => `<div class="fgroup"><div class="fgh"><span>${esc(g)} <small>${arr.length}건</small></span><span class="num">${CW(sum)}</span></div>${arr.map(f => `<div class="fitem"><span>${esc(f.name)}${f.memo ? `<small>${esc(f.memo)}</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`).join("")}</div>`).join("") : `<div class="empty">노션 고정비 DB에 항목이 없어요.</div>`;
+    const fixedHTML = F.length ? GL.map(([g, arr, sum]) => { const op = OPEN_F.has(g); return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(g)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(g)} <small>${arr.length}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${CW(sum)}</span></div>${arr.map(f => `<div class="fitem"${op ? "" : " hidden"}><span>${esc(f.name)}${f.memo ? `<small>${esc(f.memo)}</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`).join("")}</div>`; }).join("") : `<div class="empty">노션 고정비 DB에 항목이 없어요.</div>`;
     box.innerHTML = `<section class="two">
         <div><div class="sh"><h2>월별 고정비</h2><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedHTML}</div>
         <div><div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div></div>
