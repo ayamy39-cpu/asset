@@ -193,6 +193,19 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .frow .a{font-weight:700}
 .frow .a.miss{color:var(--faint);font-weight:500;font-size:13.5px}
 .ftot{display:flex;justify-content:space-between;padding-top:14px;font-weight:700}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:48px;align-items:start}
+.two>div{display:grid;gap:20px;min-width:0}
+@media (max-width:860px){.two{grid-template-columns:minmax(0,1fr);gap:40px}}
+.fgroup{border-top:1px solid var(--line-2);padding-block:12px 4px}
+.fgroup+.fgroup{margin-top:6px}
+.fgh{display:flex;justify-content:space-between;font-weight:700;font-size:15px;padding-bottom:6px}
+.fgh small{color:var(--faint);font-weight:500;font-size:12.5px;margin-left:4px}
+.fitem{display:flex;justify-content:space-between;gap:12px;padding:7px 0 7px 12px;font-size:14px;color:var(--sub)}
+.fitem small{display:block;color:var(--faint);font-size:12px}
+.fitem .num{color:var(--ink)}
+.fitem .miss{color:var(--faint);font-size:13px}
+table.acct td{padding-top:10px;padding-bottom:10px}
+.an{font-weight:600;color:var(--ink)} .ab{color:var(--faint);font-size:12px}
 footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--faint);font-size:12.5px;display:grid;gap:4px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -550,12 +563,16 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
     const st = $("#aStale"); st.hidden = days < 45; st.textContent = `노션 저축 기록이 ${fd(A.asOf)} 이후 업데이트되지 않았어요. 노션에 기록을 이어서 입력하면 다음 날 아침 자동으로 반영돼요.`;
     const F = A.fixed || [], ft = F.reduce((s, f) => s + (f.amount || 0), 0), miss = F.filter(f => f.amount == null).length;
-    const accRows = accs.map(a => `<tr><td>${esc(a.name)}</td><td>${esc(a.bank || "")}</td><td>${esc(a.owner || "")}</td><td>${a.avail === "Y" ? "가능" : "–"}</td><td class="r num">${W(a.balance)}</td><td class="r num">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`).join("");
+    const accRows = accs.map(a => `<tr><td><div class="an">${esc(a.name)}</div><div class="ab">${esc(a.bank || "")}${a.avail === "Y" ? " · 바로 사용" : ""}</div></td><td>${esc(a.owner || "")}</td><td class="r num"><b>${W(a.balance)}</b></td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`).join("");
     const stRows = stocks.map(x => { const pl = x.buy ? (x.price - x.buy) / x.buy * 100 : null; return `<tr><td>${esc(x.name)}</td><td class="r num">${x.qty}주</td><td class="r num">${x.buy ? Number(x.buy).toLocaleString("ko-KR") : "–"}</td><td class="r num">${x.price ? Number(x.price).toLocaleString("ko-KR") : "–"}</td><td class="r num ${pl > 0 ? "up" : pl < 0 ? "down" : ""}">${pl == null ? "–" : (pl > 0 ? "+" : "") + pl.toFixed(1) + "%"}</td><td class="r num">${W(x.value)}</td></tr>`; }).join("");
-    box.innerHTML = `<section><div class="sh"><h2>월별 고정비</h2><span class="src">노션 · 고정비</span></div>
-        <div class="fixed">${F.length ? F.map(f => `<div class="frow"><div><div class="n">${esc(f.name)}</div><div class="m">${esc([f.category, f.memo, f.day ? "매월 " + f.day + "일" : ""].filter(Boolean).join(" · "))}</div></div><div class="a num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : W(f.amount) + "원"}</div></div>`).join("") : `<div class="empty">노션 고정비 DB에 항목이 없어요.</div>`}</div>
-        ${F.length ? `<div class="ftot"><span>월 합계</span><span class="num">${ft ? W(ft) + "원" : "–"}${miss ? ` <span style="color:var(--faint);font-weight:500;font-size:13px">(${miss}개 금액 미입력)</span>` : ""}</span></div>` : ""}</section>
-      <section><div class="sh"><h2>통장별 잔액</h2><span class="src">잔액이 0인 통장은 숨김</span></div><div class="tw"><table><thead><tr><th>통장</th><th>금융사</th><th>명의</th><th>가용</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div></section>
+    const G = {}; F.forEach(f => (G[f.category || "기타"] ||= []).push(f));
+    const GL = Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]);
+    const CW = v => Number(Math.round(v)).toLocaleString("ko-KR") + "원";
+    const fixedHTML = F.length ? GL.map(([g, arr, sum]) => `<div class="fgroup"><div class="fgh"><span>${esc(g)} <small>${arr.length}건</small></span><span class="num">${CW(sum)}</span></div>${arr.map(f => `<div class="fitem"><span>${esc(f.name)}${f.memo ? `<small>${esc(f.memo)}</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`).join("")}</div>`).join("") : `<div class="empty">노션 고정비 DB에 항목이 없어요.</div>`;
+    box.innerHTML = `<section class="two">
+        <div><div class="sh"><h2>월별 고정비</h2><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedHTML}</div>
+        <div><div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div></div>
+      </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
   }
