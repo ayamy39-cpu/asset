@@ -213,6 +213,11 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .fitem .num{color:var(--ink)}
 .fitem .miss{color:var(--faint);font-size:13px}
 table.acct td{padding-top:10px;padding-bottom:10px}
+.three{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px}
+@media (max-width:900px){.three{grid-template-columns:1fr;gap:28px}}
+.ph{display:flex;flex-direction:column;gap:4px;text-align:left;padding:18px 16px;border:1px dashed var(--line-2);border-radius:10px;margin-top:12px}
+.ph b{color:var(--ink);font-size:14px}
+.ph span{color:var(--faint);font-size:13px}
 table.acct tr.agrp .an small{color:var(--faint);font-weight:500;font-size:12.5px;margin-left:4px}
 table.acct tr.agrp{cursor:pointer}
 table.acct tr.agrp:hover td{background:var(--accent-soft)}
@@ -601,9 +606,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const GL = Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]);
     const CW = v => Number(Math.round(v)).toLocaleString("ko-KR") + "원";
     const fixedHTML = F.length ? GL.map(([g, arr, sum]) => { const op = OPEN_F.has(g); return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(g)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(g)} <small>${arr.length}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${CW(sum)}</span></div>${arr.map(f => `<div class="fitem"${op ? "" : " hidden"}><span>${esc(f.name)}${f.memo ? `<small>${esc(f.memo)}</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`).join("")}</div>`; }).join("") : `<div class="empty">노션 고정비 DB에 항목이 없어요.</div>`;
-    box.innerHTML = `<section class="two">
+    const ph = (t, d) => `<div class="empty ph"><b>${t}</b><span>${d}</span></div>`;
+    box.innerHTML = `<section>
+        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
+      </section>
+      <section class="three">
+        <div><div class="sh"><h2>월별 Income</h2><span class="src">준비 중</span></div>${ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.")}</div>
         <div><div class="sh"><h2>월별 고정비</h2><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedHTML}</div>
-        <div><div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div></div>
+        <div><div class="sh"><h2>월별 저축액</h2><span class="src">준비 중</span></div>${ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.")}</div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
