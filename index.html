@@ -617,13 +617,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const nowYM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const INC = (A.income || []).filter(x => !x.until || x.until >= nowYM), it = INC.reduce((s, x) => s + (x.amount || 0), 0);
     const incHTML = INC.length ? grpHTML(INC, "i:", "") : ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.");
-    box.innerHTML = `<section>
-        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
-      </section>
-      <section class="three">
+    box.innerHTML = `<section class="three">
         <div><div class="sh"><h2>월별 Income</h2><span class="src num">${INC.length ? `월 합계 <b style="color:var(--ink)">${CW(it)}</b>` : "준비 중"}</span></div>${incHTML}</div>
         <div><div class="sh"><h2>월별 고정비</h2><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedHTML}</div>
         <div><div class="sh"><h2>월별 저축액</h2><span class="src">준비 중</span></div>${ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.")}</div>
+      </section>
+      <section>
+        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
