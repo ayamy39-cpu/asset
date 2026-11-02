@@ -206,7 +206,11 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .fgroup+.fgroup:not(.open){margin-top:0}
 .fgroup.open .fitem{padding-left:26px}
 .fgh .chev{display:inline-block;width:14px;color:var(--accent);font-weight:700;transition:transform .15s}
-.fgroup.open .fgh .chev{transform:rotate(90deg)}
+.fgroup.open>.fgh .chev{transform:rotate(90deg)}
+.fsub{margin-left:22px}
+.fgh.fsh{font-size:14px;font-weight:600;padding:7px 0}
+.fsub.open>.fgh .chev{transform:rotate(90deg)}
+.fsub .fitem{padding-left:26px}
 .fgh small{color:var(--faint);font-weight:500;font-size:12.5px;margin-left:4px}
 .fitem{display:flex;justify-content:space-between;gap:12px;padding:7px 0 7px 12px;font-size:14px;color:var(--sub)}
 .fitem small{display:block;color:var(--faint);font-size:12px}
@@ -605,12 +609,24 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const ph = (t, d) => `<div class="empty ph"><b>${t}</b><span>${d}</span></div>`;
     const CW = v => Number(Math.round(v)).toLocaleString("ko-KR") + "원";
     const ym = v => v ? `${String(v).slice(2, 4)}.${String(v).slice(5, 7)}` : "";
+    const PEOPLE = new Set((A.income || []).map(i => i.name));
+    { const c = {}; (A.fixed || []).forEach(f => { const n = String(f.name || ""); if (n.includes(" ")) { const p = n.split(" ")[0]; c[p] = (c[p] || 0) + 1; } }); Object.entries(c).forEach(([p, n]) => n >= 2 && PEOPLE.add(p)); }
     const grpHTML = (list, pfx, emptyMsg) => {
       if (!list.length) return `<div class="empty">${emptyMsg}</div>`;
       const G = {}; list.forEach(f => (G[f.category || "기타"] ||= []).push(f));
       return Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]).map(([g, arr, sum]) => {
         const k = pfx + g, op = OPEN_F.has(k);
-        return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(g)} <small>${arr.length}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${CW(sum)}</span></div>${arr.map(f => `<div class="fitem"${op ? "" : " hidden"}><span>${esc(f.name)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`).join("")}</div>`;
+        const item = (f, label) => `<div class="fitem"><span>${esc(label)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`;
+        const who = f => { const p = String(f.name).split(" ")[0]; return String(f.name).includes(" ") && PEOPLE.has(p) ? p : null; };
+        let body;
+        if (arr.some(who)) {
+          const P = {}; arr.forEach(f => (P[who(f) || "공통"] ||= []).push(f));
+          body = Object.entries(P).map(([p, a]) => [p, a, a.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => (a[0] === "공통") - (b[0] === "공통") || b[2] - a[2]).map(([p, a, s]) => {
+            const k2 = k + "|" + p, o2 = OPEN_F.has(k2);
+            return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(p)} <small>${a.length}건</small></span><span class="num">${CW(s)}</span></div>${o2 ? a.map(f => item(f, who(f) ? String(f.name).slice(p.length).trim() : f.name)).join("") : ""}</div>`;
+          }).join("");
+        } else body = arr.map(f => item(f, f.name)).join("");
+        return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(g)} <small>${arr.length}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${CW(sum)}</span></div>${op ? body : ""}</div>`;
       }).join("");
     };
     const fixedHTML = grpHTML(F, "f:", "노션 고정비 DB에 항목이 없어요.");
