@@ -579,7 +579,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const W = v => won(v / 10000); // 원 → 만원 표기
     $("#aTotal").innerHTML = esc(W(tot)) + "<small>원</small>";
     $("#aTotalSub").textContent = `${fd(A.asOf)} 기준 · 통장 ${accs.length}개`;
-    const owners = {}; accs.forEach(a => owners[a.owner || "기타"] = (owners[a.owner || "기타"] || 0) + a.balance);
+    const owners = {}; accs.forEach(a => owners[a.owner || "통장 미지정"] = (owners[a.owner || "통장 미지정"] || 0) + a.balance);
     $("#aSplit").innerHTML = `<div class="r2"><span>예·적금</span><b class="num">${W(dep)}</b></div>`
       + Object.entries(owners).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r2"><span>└ ${esc(k)} 명의</span><span class="num">${W(v)}</span></div>`).join("")
       + `<div class="availbar"><span style="width:${(avail / tot * 100).toFixed(1)}%"></span><span style="flex:1"></span></div><div class="meta" style="margin:0">바로 쓸 수 있는 돈 <b class="num" style="color:var(--ink)">${W(avail)}</b> · 묶인 돈 ${W(tot - avail)}</div>`;
