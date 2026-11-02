@@ -576,6 +576,10 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.agrp, .fgh[data-fg]")) { e.preventDefault(); e.target.click(); } });
   function renderAsset() {
     const A = S.asset, box = $("#assetBody");
+    { const FULLN = { "지형": "민지형", "현영": "이현영" }, nm = v => v == null ? v : String(v).split(/([_\s]+)/).map(t => FULLN[t] || t).join("");
+      (A.accounts || []).forEach(a => { a.name = nm(a.name); a.owner = nm(a.owner); });
+      (A.fixed || []).forEach(f => { f.name = nm(f.name); f.category = nm(f.category); });
+      (A.income || []).forEach(i => { i.name = nm(i.name); }); }
     if (!A || !(A.accounts || []).length) { $("#aTotal").textContent = "–"; $("#aTotalSub").textContent = "노션 자산 데이터 연결 대기"; box.innerHTML = ""; return; }
     const accs = A.accounts.filter(a => a.balance), stocks = [];
     const dep = accs.reduce((s, a) => s + a.balance, 0), stk = stocks.reduce((s, x) => s + (x.value || 0), 0), tot = dep + stk;
