@@ -223,7 +223,8 @@ table.acct td{padding-top:10px;padding-bottom:10px}
 @media (max-width:900px){.three{grid-template-columns:1fr;gap:28px}}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 @media (max-width:900px){.two{grid-template-columns:1fr}}
-.fitem.fp{font-weight:600;color:var(--ink)}
+.tritem{border-top:1px solid var(--line-2)}
+.tritem .trm{display:inline-block;min-width:42px;color:var(--accent);font-weight:700;margin-right:8px}
 .ph{display:flex;flex-direction:column;gap:4px;text-align:left;padding:18px 16px;border:1px dashed var(--line-2);border-radius:10px;margin-top:12px}
 .ph b{color:var(--ink);font-size:14px}
 .ph span{color:var(--faint);font-size:13px}
@@ -640,9 +641,11 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       }).join("");
     };
     const fixedHTML = grpHTML(F, "f:", "노션 고정비 DB에 항목이 없어요.");
+    const nowYM0 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const fixedDeep = grpHTML(F, "c:", "노션 고정비 DB에 항목이 없어요.", true);
-    const TR = A.travel || [], trt = TR.reduce((s, x) => s + (x.amount || 0), 0);
-    const travelHTML = TR.length ? grpHTML(TR, "t:", "", true) : ph("곧 연결돼요", "노션에 여행비 DB를 만들면 여기에 여행별로 보여 드려요.");
+    const curY = nowYM0.slice(0, 4);
+    const TR = (A.travel || []).filter(x => String(x.when || "").startsWith(curY)).sort((a, b) => String(a.when).localeCompare(String(b.when))), trt = TR.reduce((s, x) => s + (x.amount || 0), 0);
+    const travelHTML = TR.length ? TR.map(x => `<div class="fitem tritem"><span><b class="trm num">${esc(String(x.when).slice(5, 7))}월</b>${esc(x.name)}</span><span class="num ${x.amount == null ? "miss" : ""}">${x.amount == null ? "금액 미입력" : CW(x.amount)}</span></div>`).join("") : ph(`${curY}년 여행비가 없어요`, "노션 여행비 DB에 올해 여행을 추가하면 여기에 보여 드려요.");
     const nowYM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const INC = (A.income || []).filter(x => !x.until || x.until >= nowYM), it = INC.reduce((s, x) => s + (x.amount || 0), 0);
     const incHTML = INC.length ? grpHTML(INC, "i:", "") : ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.");
@@ -658,7 +661,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
           <div><div class="sh"><h3>월별 고정비 상세 내역</h3><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
-          <div><div class="sh"><h3>여행비</h3><span class="src num">${TR.length ? `합계 <b style="color:var(--ink)">${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
+          <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num">${TR.length ? `${TR.length}건 · 합계 <b style="color:var(--ink)">${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
         </div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
