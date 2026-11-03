@@ -73,7 +73,8 @@ section{padding-block:40px;border-top:1px solid var(--line);display:grid;gap:20p
 .sh{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:8px 16px}
 .sh h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em}
 .sh h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
-.two .sh{margin:14px 0 8px}
+.two .sh{margin:14px 0 8px;align-items:center}
+.ctot b{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin-left:4px}
 .sh .src{color:var(--faint);font-size:13px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.9fr);gap:32px;align-items:start}
 @media (max-width:820px){.split{grid-template-columns:minmax(0,1fr)}.split>.chartbox{order:2}}
@@ -655,14 +656,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div><div class="sh"><h2>월별 저축액</h2><span class="src">준비 중</span></div>${ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.")}</div>
       </section>
       <section>
-        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
-      </section>
-      <section>
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
-          <div><div class="sh"><h3>월별 고정비 상세 내역</h3><span class="src num">월 합계 <b style="color:var(--ink)">${ft ? CW(ft) : "–"}</b>${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
-          <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num">${TR.length ? `${TR.length}건 · 합계 <b style="color:var(--ink)">${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
+          <div><div class="sh"><h3>월별 고정비 상세 내역</h3><span class="src num ctot">${miss ? `${miss}개 미입력 · ` : ""}월 합계 <b>${ft ? CW(ft) : "–"}</b></span></div>${fixedDeep}</div>
+          <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num ctot">${TR.length ? `${TR.length}건 · 합계 <b>${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
         </div>
+      </section>
+      <section>
+        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
