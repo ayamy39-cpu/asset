@@ -74,6 +74,8 @@ section{padding-block:40px;border-top:1px solid var(--line);display:grid;gap:20p
 .sh h2{margin:0;font-size:20px;font-weight:700;letter-spacing:-.02em}
 .sh h3{margin:0;font-size:16px;font-weight:700;letter-spacing:-.01em}
 .two .sh{margin:14px 0 8px;align-items:center}
+.csub{display:flex;flex-wrap:wrap;justify-content:space-between;gap:4px 12px;font-size:13px;color:var(--sub);padding:0 0 8px;font-weight:600}
+.csub .num{color:var(--faint);font-weight:500}
 .ctot b{font-size:24px;font-weight:800;color:var(--ink);letter-spacing:-.02em;margin-left:4px}
 .sh .src{color:var(--faint);font-size:13px}
 .split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.9fr);gap:32px;align-items:start}
@@ -658,7 +660,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       <section>
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
-          <div><div class="sh"><h3>월별 고정비 상세 내역</h3><span class="src num ctot">${miss ? `${miss}개 미입력 · ` : ""}월 합계 <b>${ft ? CW(ft) : "–"}</b></span></div>${fixedDeep}</div>
+          <div><div class="sh"><h3>고정비</h3><span class="src num ctot">연 총액 <b>${ft ? CW(ft * 12) : "–"}</b></span></div><div class="csub"><span>월별 고정비 상세 내역</span><span class="num">월 합계 ${ft ? CW(ft) : "–"} × 12개월${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
           <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num ctot">${TR.length ? `${TR.length}건 · 합계 <b>${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
         </div>
       </section>
