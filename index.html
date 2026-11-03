@@ -609,13 +609,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
     const st = $("#aStale"); st.hidden = days < 45; st.textContent = `노션 저축 기록이 ${fd(A.asOf)} 이후 업데이트되지 않았어요. 노션에 기록을 이어서 입력하면 다음 날 아침 자동으로 반영돼요.`;
     const F = A.fixed || [], ft = F.reduce((s, f) => s + (f.amount || 0), 0), miss = F.filter(f => f.amount == null).length;
-    const accRow = (a, nm, sub, gi) => `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(nm)}</div><div class="ab">${esc(a.bank || "")}${a.avail === "Y" ? " · 바로 사용" : ""}</div></td><td>${esc(a.owner || "")}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`;
+    const bo = a => a.bank ? `${a.bank}${a.owner ? `(${a.owner})` : ""}` : (a.owner || "");
+    const accRow = (a, nm, sub, gi) => { const main = sub ? (bo(a) || nm) : nm; const extra = sub ? (nm && nm !== a.owner ? nm : "") : bo(a); const note = [extra, a.avail === "Y" ? "바로 사용" : ""].filter(Boolean).join(" · ");
+      return `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(main)}</div>${note ? `<div class="ab">${esc(note)}</div>` : ""}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`; };
     const AG = {}; accs.forEach(a => { const n = (a.name || "").replace(/\\_/g, "_"), i = n.indexOf("_"); const g = i > 0 ? n.slice(0, i).trim() : null; const k = g ? "g:" + g : "s:" + n; (AG[k] ||= { g, items: [] }).items.push({ a, sub: g ? n.slice(i + 1).trim() : n }); });
     const accRows = Object.values(AG).map(x => ({ ...x, sum: x.items.reduce((s, y) => s + y.a.balance, 0) })).sort((p, q) => q.sum - p.sum).map(x => {
       if (!x.g) return accRow(x.items[0].a, x.items[0].sub, false);
       const gi = x.g, op = OPEN_G.has(gi);
-      const ow = [...new Set(x.items.map(y => y.a.owner).filter(Boolean))].join(", ");
-      return `<tr class="agrp${op ? " open" : ""}" data-g="${esc(gi)}" tabindex="0" aria-expanded="${op}"><td><div class="an"><span class="chev">›</span>${esc(x.g)} <small>${x.items.length}개 · ${op ? "접기" : "상세 보기"}</small></div></td><td>${esc(ow)}</td><td class="r num"><b>${W(x.sum)}</b></td><td class="r num" style="color:var(--faint)">${(x.sum / tot * 100).toFixed(1)}%</td></tr>`
+      return `<tr class="agrp${op ? " open" : ""}" data-g="${esc(gi)}" tabindex="0" aria-expanded="${op}"><td><div class="an"><span class="chev">›</span>${esc(x.g)} <small>${x.items.length}개 · ${op ? "접기" : "상세 보기"}</small></div></td><td class="r num"><b>${W(x.sum)}</b></td><td class="r num" style="color:var(--faint)">${(x.sum / tot * 100).toFixed(1)}%</td></tr>`
         + x.items.sort((p, q) => q.a.balance - p.a.balance).map(y => accRow(y.a, y.sub, true, esc(gi))).join("");
     }).join("");
     const stRows = stocks.map(x => { const pl = x.buy ? (x.price - x.buy) / x.buy * 100 : null; return `<tr><td>${esc(x.name)}</td><td class="r num">${x.qty}주</td><td class="r num">${x.buy ? Number(x.buy).toLocaleString("ko-KR") : "–"}</td><td class="r num">${x.price ? Number(x.price).toLocaleString("ko-KR") : "–"}</td><td class="r num ${pl > 0 ? "up" : pl < 0 ? "down" : ""}">${pl == null ? "–" : (pl > 0 ? "+" : "") + pl.toFixed(1) + "%"}</td><td class="r num">${W(x.value)}</td></tr>`; }).join("");
@@ -665,7 +666,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         </div>
       </section>
       <section>
-        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th>명의</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
+        <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
