@@ -227,6 +227,9 @@ table.acct td{padding-top:10px;padding-bottom:10px}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 @media (max-width:900px){.two{grid-template-columns:1fr}}
 .tritem{border-top:1px solid var(--line-2)}
+.fgroup.open .tritem{padding-left:12px}
+.tag-plan{font-style:normal;font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:1px}
+.estv{color:var(--faint);font-style:italic}
 .tritem .trm{display:inline-block;min-width:42px;color:var(--accent);font-weight:700;margin-right:8px}
 .ph{display:flex;flex-direction:column;gap:4px;text-align:left;padding:18px 16px;border:1px dashed var(--line-2);border-radius:10px;margin-top:12px}
 .ph b{color:var(--ink);font-size:14px}
@@ -648,8 +651,15 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const nowYM0 = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const fixedDeep = grpHTML(F, "c:", "노션 고정비 DB에 항목이 없어요.", true);
     const curY = nowYM0.slice(0, 4);
-    const TR = (A.travel || []).filter(x => String(x.when || "").startsWith(curY)).sort((a, b) => String(a.when).localeCompare(String(b.when))), trt = TR.reduce((s, x) => s + (x.amount || 0), 0);
-    const travelHTML = TR.length ? TR.map(x => `<div class="fitem tritem"><span><b class="trm num">${esc(String(x.when).slice(5, 7))}월</b>${esc(x.name)}</span><span class="num ${x.amount == null ? "miss" : ""}">${x.amount == null ? "금액 미입력" : CW(x.amount)}</span></div>`).join("") : ph(`${curY}년 여행비가 없어요`, "노션 여행비 DB에 올해 여행을 추가하면 여기에 보여 드려요.");
+    const TRALL = A.travel || [], done = TRALL.filter(x => x.status !== "예정" && x.amount != null);
+    const avg = arr => arr.length ? Math.round(arr.reduce((s, x) => s + x.amount, 0) / arr.length / 1e4) * 1e4 : null;
+    const estOf = x => avg(done.filter(d => d.kind === x.kind && x.plan && d.plan === x.plan)) ?? avg(done.filter(d => d.kind === x.kind)) ?? avg(done);
+    const TR = TRALL.filter(x => String(x.when || "").startsWith(curY)).map(x => ({ ...x, est: x.amount == null && x.status === "예정" ? estOf(x) : null })).sort((a, b) => String(a.when).localeCompare(String(b.when)));
+    const trv = x => x.amount ?? x.est ?? 0, trt = TR.reduce((s, x) => s + trv(x), 0), trEst = TR.some(x => x.est != null);
+    const trItem = x => `<div class="fitem tritem"><span><b class="trm num">${esc(String(x.when).slice(5, 7))}월</b>${esc(x.name)}${x.plan ? `(${esc(x.plan)})` : ""}${x.status === "예정" ? `<em class="tag-plan">예정</em>` : ""}</span><span class="num ${x.amount == null && x.est == null ? "miss" : ""}">${x.amount != null ? CW(x.amount) : x.est != null ? `<span class="estv">예상 약 ${CW(x.est)}</span>` : "금액 미입력"}</span></div>`;
+    const TG = {}; TR.forEach(x => (TG[x.kind || "기타"] ||= []).push(x));
+    const travelHTML = TR.length ? Object.entries(TG).map(([g, arr]) => [g, arr, arr.reduce((s, x) => s + trv(x), 0)]).sort((a, b) => b[2] - a[2]).map(([g, arr, sum]) => { const k = "t:" + g, op = OPEN_F.has(k), np = arr.filter(x => x.status === "예정").length;
+      return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(g)} <small>${arr.length}건${np ? ` · 예정 ${np}` : ""} · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${CW(sum)}</span></div>${op ? arr.map(trItem).join("") : ""}</div>`; }).join("") : ph(`${curY}년 여행비가 없어요`, "노션 여행비 DB에 올해 여행을 추가하면 여기에 보여 드려요.");
     const nowYM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const INC = (A.income || []).filter(x => !x.until || x.until >= nowYM), it = INC.reduce((s, x) => s + (x.amount || 0), 0);
     const incHTML = INC.length ? grpHTML(INC, "i:", "") : ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.");
@@ -662,7 +672,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
           <div><div class="sh"><h3>고정비</h3><span class="src num ctot">연 총액 <b>${ft ? CW(ft * 12) : "–"}</b></span></div><div class="csub"><span>월별 고정비 상세 내역</span><span class="num">월 합계 ${ft ? CW(ft) : "–"} × 12개월${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
-          <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num ctot">${TR.length ? `${TR.length}건 · 합계 <b>${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
+          <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num ctot">${TR.length ? `${TR.length}건 · 합계${trEst ? "(예상 포함)" : ""} <b>${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
         </div>
       </section>
       <section>
