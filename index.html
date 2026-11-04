@@ -187,6 +187,8 @@ label.f{display:grid;gap:6px;font-size:13px;color:var(--sub);min-width:0}
 .split2 .r2{display:flex;justify-content:space-between;gap:12px;padding:10px 0;border-bottom:1px solid var(--line);font-size:14.5px}
 .split2 .r2 span:first-child{color:var(--sub)}
 .split2 .r2 b{font-weight:600}
+.goalhd{display:flex;justify-content:space-between;align-items:baseline;margin-top:16px;font-size:14px;color:var(--sub)}
+.goalhd b{color:var(--ink)} .goalhd .goalpct{font-size:22px;color:var(--accent)}
 .availbar{display:flex;height:8px;border-radius:4px;overflow:hidden;background:var(--tint);margin:14px 0 6px}
 .availbar span:first-child{background:var(--accent)} .availbar span:last-child{background:var(--line-2)}
 .stale{margin-top:20px;padding:12px 16px;border-radius:10px;background:var(--accent-soft);color:var(--accent-ink);font-size:13.5px}
@@ -607,7 +609,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const owners = {}; accs.forEach(a => owners[a.owner || "통장 미지정"] = (owners[a.owner || "통장 미지정"] || 0) + a.balance);
     $("#aSplit").innerHTML = `<div class="r2"><span>예·적금</span><b class="num">${W(dep)}</b></div>`
       + Object.entries(owners).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r2"><span>└ ${esc(k)} 명의</span><span class="num">${W(v)}</span></div>`).join("")
-      + `<div class="availbar"><span style="width:${(avail / tot * 100).toFixed(1)}%"></span><span style="flex:1"></span></div><div class="meta" style="margin:0">바로 쓸 수 있는 돈 <b class="num" style="color:var(--ink)">${W(avail)}</b> · 묶인 돈 ${W(tot - avail)}</div>`;
+      + (() => {
+        const GOAL = 250000000, rate = Math.min(tot / GOAL * 100, 100), left = Math.max(GOAL - tot, 0);
+        const d0 = new Date(A.asOf || Date.now()), mLeft = Math.max((2030 - d0.getFullYear()) * 12 + (12 - (d0.getMonth() + 1)), 1);
+        return `<div class="goalhd"><span>2030년 목표 <b>2.5억</b></span><b class="num goalpct">${rate.toFixed(1)}%</b></div>`
+          + `<div class="availbar"><span style="width:${rate.toFixed(1)}%"></span><span style="flex:1"></span></div>`
+          + `<div class="meta" style="margin:0">${left ? `남은 금액 <b class="num" style="color:var(--ink)">${W(left).replace(/억 ([\d,]+)$/, "억 $1만")}</b> · 2030년 말까지 월 ${W(Math.round(left / mLeft))}씩 모으면 달성` : "목표를 달성했어요 🎉"}</div>`;
+      })();
     const Y = A.yearly || [], ly = Y[Y.length - 1];
     if (ly) {
       $("#aYear").innerHTML = `<span class="${ly.change >= 0 ? "up" : "down"}">${esc(sgn(ly.change / 10000))}</span><small>${ly.year}년${A.asOf && A.asOf.startsWith(String(ly.year)) && A.asOf.slice(5, 7) !== "12" ? " (" + (+A.asOf.slice(5, 7)) + "월까지)" : ""}</small>`;
