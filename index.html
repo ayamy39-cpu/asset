@@ -678,10 +678,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const nowYM = new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 7);
     const M = A.monthly || null, mLbl = M && M.ym ? `${+M.ym.slice(5, 7)}월` : "지난달";
     const INC = (A.income || []).filter(x => !x.until || x.until >= nowYM).map(x => x.name === "이현영" && M && M.salary != null ? { ...x, amount: M.salary, until: null } : x), it = INC.reduce((s, x) => s + (x.amount || 0), 0);
-    const loanAmt = M && M.loan != null ? Math.abs(M.loan) : null, costT = ft + (loanAmt || 0);
+    const loanAmt = M && M.loan != null ? Math.abs(M.loan) : null, costT = ft + (loanAmt || 0) + (M && M.cards ? M.cards.reduce((s, c) => s + Math.abs(c.amount || 0), 0) : 0);
     const FG = {}; F.forEach(f => (FG[f.category || "기타"] ||= 0, FG[f.category || "기타"] += f.amount || 0));
     const cgrp = (k, title, sum, cnt, body) => { const op = OPEN_F.has(k); return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(title)} <small>${cnt}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${sum == null ? "–" : CW(sum)}</span></div>${op ? body : ""}</div>`; };
-    const costHTML = cgrp("m:fixed", "고정비", ft, F.length, Object.entries(FG).sort((a, b) => b[1] - a[1]).map(([g, v]) => `<div class="fitem"><span>${esc(g)}</span><span class="num">${CW(v)}</span></div>`).join(""))
+    const CARDS = M && M.cards ? M.cards : [], cardT = CARDS.reduce((s, c) => s + Math.abs(c.amount || 0), 0);
+    const cardBody = CARDS.length ? CARDS.map(c => { const k2 = "m:card|" + c.card, o2 = OPEN_F.has(k2);
+      return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(c.card)} <small>${(c.items || []).length}건</small></span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
+    const costHTML = cgrp("m:card", "카드 사용액", cardT, CARDS.length, cardBody) + cgrp("m:fixed", "고정비", ft, F.length, Object.entries(FG).sort((a, b) => b[1] - a[1]).map(([g, v]) => `<div class="fitem"><span>${esc(g)}</span><span class="num">${CW(v)}</span></div>`).join(""))
       + cgrp("m:loan", "부동산 원금+이자", loanAmt, M && M.loanItems ? M.loanItems.length : 0, M && M.loanItems && M.loanItems.length ? M.loanItems.map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.memo || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : `<div class="fitem"><span>${mLbl} 납부 내역이 없어요</span><span></span></div>`);
     const incHTML = INC.length ? grpHTML(INC, "i:", "") : ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.");
     box.innerHTML = `<section class="three">
