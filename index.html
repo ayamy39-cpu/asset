@@ -227,6 +227,9 @@ table.acct td{padding-top:10px;padding-bottom:10px}
 .two{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px}
 @media (max-width:900px){.two{grid-template-columns:1fr}}
 .tritem{border-top:1px solid var(--line-2)}
+.savbig{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;padding:12px 0 2px;border-top:1px solid var(--line-2)}
+.savbig b{font-size:26px;font-weight:800;letter-spacing:-.02em}
+.savbig span{color:var(--sub);font-size:14px}
 .fgroup.open .tritem{padding-left:12px}
 .tag-plan{font-style:normal;font-size:11.5px;font-weight:700;color:var(--accent);background:var(--accent-soft);border-radius:999px;padding:2px 8px;margin-left:8px;vertical-align:1px}
 .estv{color:var(--faint);font-style:italic}
@@ -684,13 +687,16 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const CARDS = M && M.cards ? M.cards : [], cardT = CARDS.reduce((s, c) => s + Math.abs(c.amount || 0), 0);
     const cardBody = CARDS.length ? CARDS.map(c => { const k2 = "m:card|" + c.card, o2 = OPEN_F.has(k2);
       return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(c.card)} <small>${(c.items || []).length}건</small></span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
+    const SV = M && M.savings ? M.savings : null, sgnW = v => (v > 0 ? "+" : v < 0 ? "-" : "") + CW(Math.abs(v));
+    const savHTML = !SV ? ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.") : `<div class="savbig"><b class="num ${SV.amount < 0 ? "down" : "up"}">${sgnW(SV.amount)}</b><span class="num">(${String(SV.year).slice(2)}년 평균 ${sgnW(SV.avg)})</span></div><p class="note" style="margin:4px 0 10px">공금·적금 통장의 전월 대비 증가액이에요. 통장끼리 옮긴 돈은 서로 상쇄돼요.</p>`
+      + cgrp("m:sav", `${SV.year}년 월별 저축`, null, (SV.months || []).length, (SV.months || []).map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월</span><span class="num ${x.amount < 0 ? "down" : ""}">${sgnW(x.amount)}</span></div>`).join(""));
     const costHTML = cgrp("m:card", "카드 사용액", cardT, CARDS.length, cardBody) + cgrp("m:fixed", "고정비", ft, F.length, Object.entries(FG).sort((a, b) => b[1] - a[1]).map(([g, v]) => `<div class="fitem"><span>${esc(g)}</span><span class="num">${CW(v)}</span></div>`).join(""))
       + cgrp("m:loan", "부동산 원금+이자", loanAmt, M && M.loanItems ? M.loanItems.length : 0, M && M.loanItems && M.loanItems.length ? M.loanItems.map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.memo || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : `<div class="fitem"><span>${mLbl} 납부 내역이 없어요</span><span></span></div>`);
     const incHTML = INC.length ? grpHTML(INC, "i:", "") : ph("곧 연결돼요", "수입 기준을 정하면 여기에 월별로 보여 드려요.");
     box.innerHTML = `<section class="three">
         <div><div class="sh"><h2>월별 Income</h2><span class="src num">${INC.length ? `${mLbl} 기준 · 합계 <b style="color:var(--ink)">${CW(it)}</b>` : "준비 중"}</span></div>${incHTML}</div>
         <div><div class="sh"><h2>월별 비용</h2><span class="src num">${mLbl} 기준 · 합계 <b style="color:var(--ink)">${CW(costT)}</b></span></div>${costHTML}</div>
-        <div><div class="sh"><h2>월별 저축</h2><span class="src">준비 중</span></div>${ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.")}</div>
+        <div><div class="sh"><h2>월별 저축</h2><span class="src num">${SV ? `${mLbl} 기준` : "준비 중"}</span></div>${savHTML}</div>
       </section>
       <section>
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
