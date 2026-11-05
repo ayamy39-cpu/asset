@@ -12,7 +12,7 @@
   --bg:#ffffff; --tint:#f6f7f5; --line:#e7e8e4; --line-2:#d5d7d1;
   --ink:#141613; --sub:#5f645c; --faint:#9a9e96;
   --accent:#f2600c; --accent-ink:#c2410c; --accent-soft:#fff1e8; --ok:#16795c; --ok-soft:#e8f3ee;
-  --up:#d1372a; --down:#2457c5;
+  --up:#d1372a; --down:#2457c5; --loan:#c9ae7a;
   --font:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;
   color-scheme:light;
 }
@@ -297,6 +297,12 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .inrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
 .inrow .s{color:var(--faint);font-size:12.5px}
 .inrow .r{text-align:right;white-space:nowrap}
+.ylegend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--sub);margin-top:6px}
+.ylegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.ylegend .tl{color:var(--faint)}
+.hero .hpair{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
+.hero .hpair>div{min-width:0}
+.hero .big.loan{color:var(--sub)}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -335,10 +341,11 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div class="split2" id="aSplit"></div>
       </div>
       <div class="acol">
-        <div class="lbl">연간 자산 증감액</div>
+        <div class="lbl">연간 자산 증감액 + 주담대 원금상환</div>
         <div class="ybig num" id="aYear">–</div>
         <div class="meta" id="aYearSub">&nbsp;</div>
-        <svg class="chart" id="yearChart" viewBox="0 0 420 200" role="img" aria-label="연도별 자산 증감액"></svg>
+        <svg class="chart" id="yearChart" viewBox="0 0 420 200" role="img" aria-label="연도별 자산 증감액과 주담대 원금상환"></svg>
+        <div class="ylegend"><span><i style="background:var(--accent)"></i>자산 증감액</span><span><i style="background:var(--loan)"></i>주담대 원금상환</span><span class="tl">막대 위 숫자 = 합계</span></div>
       </div>
     </div>
     <div id="assetBody"></div>
@@ -351,10 +358,17 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   </nav>
 
   <div class="hero">
-    <div>
-      <div class="lbl">33평 최근 실거래</div>
-      <div class="big num" id="hLast">–</div>
-      <div class="meta" id="hLastSub">&nbsp;</div>
+    <div class="hpair">
+      <div>
+        <div class="lbl">33평 최근 실거래</div>
+        <div class="big num" id="hLast">–</div>
+        <div class="meta" id="hLastSub">&nbsp;</div>
+      </div>
+      <div id="hLoanBox" hidden>
+        <div class="lbl">주담대 잔여금액</div>
+        <div class="big num loan" id="hLoan">–</div>
+        <div class="meta" id="hLoanSub">&nbsp;</div>
+      </div>
     </div>
     <div class="stats">
       <div class="stat"><span class="k">올해 상승폭</span><span class="v num" id="kYtd">–</span><span class="s" id="kYtdSub">&nbsp;</span></div>
@@ -549,6 +563,11 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const last = t33[t33.length - 1];
     $("#hLast").innerHTML = last ? esc(won(last.price)) + "<small>원</small>" : "–";
     $("#hLastSub").textContent = last ? `${fd(last.date)} 계약 · ${last.dong && last.dong !== "미공개" ? last.dong + " " : ""}${last.floor}층` : "올해 거래 없음";
+    { const M = S.asset && S.asset.mortgage, box = $("#hLoanBox");
+      if (M && M.amount) { const paid = (M.months || []).reduce((t, m) => t + (m.principal || 0), 0) + (M.prepaid || 0), rem = M.amount - paid;
+        box.hidden = false; $("#hLoan").innerHTML = esc(won(rem / 10000).replace(/억 ([\d,]+)$/, "억 $1만")) + "<small>원</small>";
+        $("#hLoanSub").textContent = `대출 ${won(M.amount / 10000).replace(/억 ([\d,]+)$/, "억 $1만")} 중 ${(paid / M.amount * 100).toFixed(1)}% 상환` + (last ? ` · 실거래가 대비 ${(rem / 10000 / last.price * 100).toFixed(0)}%` : "") + (M.lastYm ? ` · ${(+M.lastYm.slice(2, 4))}년 ${+M.lastYm.slice(5, 7)}월 납입까지` : "");
+      } else box.hidden = true; }
     if (t33.length > 1) { const d = last.price - t33[0].price; $("#kYtd").innerHTML = `<span class="${d >= 0 ? "up" : "down"}">${esc(sgn(d))}</span>`; $("#kYtdSub").textContent = `${won(t33[0].price)} → ${won(last.price)} (${(d / t33[0].price * 100).toFixed(1)}%)`; }
     const l = latest(homeLists().filter(x => x.avg));
     $("#kAsk").textContent = l ? won(l.avg) : "–";
@@ -699,9 +718,11 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       })();
     const Y = A.yearly || [], ly = Y[Y.length - 1];
     if (ly) {
-      $("#aYear").innerHTML = `<span class="${ly.change >= 0 ? "up" : "down"}">${esc(sgn(ly.change / 10000))}</span><small>${ly.year}년${A.asOf && A.asOf.startsWith(String(ly.year)) && A.asOf.slice(5, 7) !== "12" ? " (" + (+A.asOf.slice(5, 7)) + "월까지)" : ""}</small>`;
-      const prev = Y[Y.length - 2]; $("#aYearSub").textContent = prev ? `${prev.year}년 ${sgn(prev.change / 10000)} · 연말 잔액 ${W(prev.end)} → ${W(ly.end)}` : "";
-      yearBars($("#yearChart"), Y);
+      const PR = loanByYear(A.mortgage), lt = ly.change + (PR[ly.year] || 0);
+      $("#aYear").innerHTML = `<span class="${lt >= 0 ? "up" : "down"}">${esc(sgn(lt / 10000))}</span><small>${ly.year}년${A.asOf && A.asOf.startsWith(String(ly.year)) && A.asOf.slice(5, 7) !== "12" ? " (" + (+A.asOf.slice(5, 7)) + "월까지)" : ""}</small>`;
+      const prev = Y[Y.length - 2];
+      $("#aYearSub").textContent = `자산 증감 ${sgn(ly.change / 10000)} + 원금상환 ${sgn((PR[ly.year] || 0) / 10000)}` + (prev ? ` · ${prev.year}년 합계 ${sgn((prev.change + (PR[prev.year] || 0)) / 10000)}` : "");
+      yearBars($("#yearChart"), Y, PR);
     }
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
     const st = $("#aStale"); st.hidden = days < 45; st.textContent = `노션 저축 기록이 ${fd(A.asOf)} 이후 업데이트되지 않았어요. 노션에 기록을 이어서 입력하면 다음 날 아침 자동으로 반영돼요.`;
@@ -801,18 +822,20 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
   }
   const shortWon = v => (v > 0 ? "+" : v < 0 ? "-" : "") + (Math.abs(v) >= 1e8 ? (Math.abs(v) / 1e8).toFixed(2).replace(/\.?0+$/, "") + "억" : Math.round(Math.abs(v) / 1e4).toLocaleString("ko-KR") + "만");
-  function yearBars(svg, Y) {
-    const W = 420, H = 200, L = 8, R = 8, T = 26, B = 26, n = Y.length, bw = Math.min(46, (W - L - R) / n * .55);
-    const mx = Math.max(...Y.map(y => Math.abs(y.change)), 1), hasNeg = Y.some(y => y.change < 0), hasPos = Y.some(y => y.change > 0);
-    const zero = hasNeg && hasPos ? T + (H - T - B) * (Math.max(...Y.map(y => y.change)) / (Math.max(...Y.map(y => y.change)) - Math.min(...Y.map(y => y.change)))) : hasNeg ? T : H - B;
-    const sc = (H - T - B) / (hasNeg && hasPos ? (Math.max(...Y.map(y => y.change)) - Math.min(...Y.map(y => y.change))) : mx);
+  function loanByYear(M) { const o = {}; ((M && M.months) || []).forEach(m => { const y = +String(m.ym).slice(0, 4); if (y) o[y] = (o[y] || 0) + (m.principal || 0); }); return o; }
+  function yearBars(svg, Y, PR = {}) {
+    const W = 420, H = 200, L = 8, R = 8, T = 26, B = 26, n = Y.length, gw = (W - L - R) / n, bw = Math.min(24, gw * .32), gap = 3;
+    const vals = Y.flatMap(y => [y.change, PR[y.year] || 0, 0]), hi = Math.max(...vals), lo = Math.min(...vals);
+    const sc = (H - T - B) / Math.max(hi - lo, 1), zero = T + hi * sc;
     let g = `<line class="g" x1="${L}" x2="${W-R}" y1="${zero}" y2="${zero}"/>`;
+    const bar = (x, v, fill, op, tip) => { const h = Math.abs(v) * sc, top = v >= 0 ? zero - h : zero; return { top, bot: top + h, svg: `<rect x="${x}" y="${top}" width="${bw}" height="${Math.max(h, v ? 1 : 0)}" rx="3" fill="${fill}" opacity="${op}"><title>${tip}</title></rect>` }; };
     Y.forEach((y, i) => {
-      const cx = L + (W - L - R) * (i + .5) / n, h = Math.abs(y.change) * sc, up = y.change >= 0, last = i === n - 1;
-      const top = up ? zero - h : zero;
-      g += `<rect x="${cx - bw/2}" y="${top}" width="${bw}" height="${Math.max(h, 1)}" rx="3" fill="${up ? "var(--accent)" : "var(--down)"}" opacity="${last ? 1 : .55}"><title>${y.year}년 ${sgn(y.change / 10000)}</title></rect>`;
-      const ly = up ? top - 7 : top + h + 14;
-      g += `<text x="${cx}" y="${Math.max(12, Math.min(H - B - 2, ly))}" text-anchor="middle" style="fill:${up ? "var(--accent-ink)" : "var(--down)"};font-weight:700;font-size:11.5px">${esc(shortWon(y.change))}</text>`;
+      const cx = L + gw * (i + .5), last = i === n - 1, op = last ? 1 : .6, p = PR[y.year] || 0, tot = y.change + p;
+      const a = bar(cx - bw - gap / 2, y.change, y.change >= 0 ? "var(--accent)" : "var(--down)", op, `${y.year}년 자산 증감 ${sgn(y.change / 10000)}`);
+      const b = bar(cx + gap / 2, p, "var(--loan)", op, `${y.year}년 주담대 원금상환 ${sgn(p / 10000)}`);
+      g += a.svg + b.svg;
+      const up = tot >= 0, ly = up ? Math.min(a.top, b.top, zero) - 7 : Math.max(a.bot, b.bot, zero) + 14;
+      g += `<text x="${cx}" y="${Math.max(12, Math.min(H - B - 2, ly))}" text-anchor="middle" style="fill:${up ? "var(--accent-ink)" : "var(--down)"};font-weight:700;font-size:11.5px">${esc(shortWon(tot))}</text>`;
       g += `<text x="${cx}" y="${H - 6}" text-anchor="middle">${y.year}</text>`;
     });
     svg.innerHTML = g;
