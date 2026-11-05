@@ -253,6 +253,50 @@ table.acct tr.asub td:first-child{padding-left:30px}
 table.acct tr.asub .an{font-weight:500}
 .an{font-weight:600;color:var(--ink)} .ab{color:var(--faint);font-size:12px}
 footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--faint);font-size:12.5px;display:grid;gap:4px}
+
+/* 입력 */
+.maintabs{align-items:center}
+.inbtn{margin-left:auto;display:inline-flex!important;align-items:center;gap:6px;border:1px solid var(--line-2)!important;background:var(--bg)!important;color:var(--accent-ink)!important;padding:8px 14px!important;font-size:14px!important}
+.inbtn:hover{border-color:var(--accent)!important}
+.inbtn[hidden]{display:none!important}
+.pendbar{margin-top:14px;background:var(--accent-soft);border-radius:10px;padding:10px 14px;font-size:13.5px;color:var(--accent-ink);display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.pendbar button{background:none;border:0;color:var(--accent-ink);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:13.5px;padding:0}
+.tag-pend{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);font-size:11.5px;font-weight:600;vertical-align:1px}
+.sheet{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:20px}
+.sheet-bg{position:absolute;inset:0;background:rgba(20,22,19,.42)}
+.sheet-card{position:relative;width:min(480px,100%);max-height:calc(100dvh - 40px);overflow:auto;background:var(--bg);border-radius:16px;padding:22px 22px 26px;box-shadow:0 20px 60px rgba(0,0,0,.18)}
+@media (max-width:560px){.sheet{place-items:end stretch;padding:0}.sheet-card{width:100%;border-radius:18px 18px 0 0;max-height:92dvh;padding:18px 18px calc(24px + env(safe-area-inset-bottom))}}
+.sheet-hd{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.sheet-hd h2{margin:0;font-size:19px;letter-spacing:-.02em}
+.xbtn{border:0;background:var(--tint);width:34px;height:34px;border-radius:50%;cursor:pointer;font-size:15px;color:var(--sub)}
+.seg{display:flex;background:var(--tint);border-radius:10px;padding:4px;gap:4px}
+.seg button{flex:1;border:0;background:transparent;border-radius:8px;padding:9px 10px;font-weight:600;font-size:14px;color:var(--sub);cursor:pointer}
+.seg button[aria-selected="true"],.seg button[aria-pressed="true"]{background:var(--bg);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.seg.sm button{padding:7px 10px}
+.seg.sm button[data-io="-1"][aria-pressed="true"]{color:var(--down)} .seg.sm button[data-io="1"][aria-pressed="true"]{color:var(--up)}
+.inform{display:grid;gap:14px;margin-top:16px}
+.fl{display:grid;gap:6px;font-size:13px;color:var(--sub)}
+.fl input,.fl select{width:100%;min-width:0;border:1px solid var(--line-2);border-radius:10px;padding:11px 12px;font-size:16px;background:var(--bg);color:var(--ink)}
+.fl input:focus,.fl select:focus{border-color:var(--accent);outline:none}
+.fl input[type=file]{padding:9px;font-size:14px}
+.btn.wide{width:100%;padding:13px}
+.hint{margin:0;font-size:12.5px;color:var(--faint);line-height:1.55}
+.flist{font-size:13px;color:var(--sub);display:grid;gap:2px}
+.instat{margin:14px 0 0;font-size:13.5px;min-height:1.2em}
+.instat.ok{color:var(--ok)} .instat.bad{color:var(--up)}
+.tokbox{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:14px;font-size:13.5px;color:var(--sub)}
+.tokbox.on{padding:10px 14px;display:flex;justify-content:space-between;align-items:center;gap:8px}
+.tokbox b{color:var(--ink)}
+.tokbox ol{margin:8px 0 10px;padding-left:20px;display:grid;gap:3px}
+.tokbox a{color:var(--accent-ink)}
+.tokbox .pw{margin-top:8px}
+.tokbox .pw input{font-size:14px;letter-spacing:0;padding:10px 12px}
+.lk{background:none;border:0;color:var(--sub);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font-size:13px;padding:0}
+.inlist{margin-top:18px;display:grid;gap:0}
+.inlist h3{font-size:14px;margin:12px 0 6px}
+.inrow{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-top:1px solid var(--line);font-size:13.5px}
+.inrow .s{color:var(--faint);font-size:12.5px}
+.inrow .r{text-align:right;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -277,7 +321,9 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   <div class="maintabs" role="tablist" aria-label="화면">
     <button type="button" role="tab" id="t-asset" data-tab="asset" aria-selected="true">자산 관리</button>
     <button type="button" role="tab" id="t-home" data-tab="home" aria-selected="false">부동산</button>
+    <button type="button" class="inbtn" id="inBtn" aria-haspopup="dialog"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>입력</button>
   </div>
+  <div class="pendbar" id="pendBar" hidden></div>
 
   <div class="tabpane" id="pane-asset" role="tabpanel" aria-labelledby="t-asset">
     <div class="stale" id="aStale" hidden></div>
@@ -400,6 +446,41 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     <div>실거래: 국토교통부 실거래가 기반 · 매물: 네이버 부동산(사용자 캡처), KB·리치고 · 규제: 금융위원회 발표</div>
   </footer>
 </div>
+</div>
+
+<div class="sheet" id="inSheet" hidden>
+  <div class="sheet-bg" data-close></div>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="inTitle">
+    <div class="sheet-hd"><h2 id="inTitle">자산 입력</h2><button type="button" class="xbtn" data-close aria-label="닫기">✕</button></div>
+    <div class="seg" role="tablist">
+      <button type="button" role="tab" data-in="key" aria-selected="true">직접 입력</button>
+      <button type="button" role="tab" data-in="file" aria-selected="false">파일 업로드</button>
+    </div>
+
+    <div class="tokbox" id="tokBox"></div>
+
+    <form id="keyForm" class="inform" autocomplete="off">
+      <label class="fl"><span>통장 (자산 LIST)</span><select class="acctSel" required></select></label>
+      <div class="fl"><span>구분</span><div class="seg sm" id="ioSeg"><button type="button" data-io="-1" aria-pressed="true">출금</button><button type="button" data-io="1" aria-pressed="false">입금</button></div></div>
+      <label class="fl"><span>금액 (원)</span><input id="kAmt" inputmode="numeric" placeholder="0" required></label>
+      <label class="fl"><span>날짜</span><input id="kDate" type="date" required></label>
+      <label class="fl"><span>메모</span><input id="kMemo" maxlength="80" placeholder="예: 현영 용돈, 관리비" required></label>
+      <button class="btn wide" type="submit">입력하기</button>
+      <p class="hint">입력하면 사이트에 바로 반영되고, 노션에는 다음 날 아침 자동 업데이트 때 반영돼요.</p>
+    </form>
+
+    <form id="fileForm" class="inform" autocomplete="off" hidden>
+      <label class="fl"><span>통장 (자산 LIST)</span><select class="acctSel" required></select></label>
+      <label class="fl"><span>파일 (엑셀 · CSV · 거래내역 캡처)</span><input id="fFiles" type="file" accept=".xls,.xlsx,.csv,image/*" multiple required></label>
+      <div class="flist" id="fList"></div>
+      <label class="fl"><span>메모 (선택)</span><input id="fMemo" maxlength="120" placeholder="예: 10월 거래내역"></label>
+      <button class="btn wide" type="submit">올리기</button>
+      <p class="hint">올린 파일은 다음 날 아침 자동 업데이트 때 제가 읽어서 노션과 사이트에 반영해요. 중복된 거래는 건너뛰고, 캡처에서 정확히 읽지 못한 부분은 '확인 필요'로 알려 드려요.</p>
+    </form>
+
+    <p class="instat" id="inStat" role="status"></p>
+    <div class="inlist" id="inList"></div>
+  </div>
 </div>
 
 <script>
@@ -594,7 +675,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   });
   document.addEventListener("keydown", e => { if ((e.key === "Enter" || e.key === " ") && e.target.matches && e.target.matches("tr.agrp, .fgh[data-fg]")) { e.preventDefault(); e.target.click(); } });
   function renderAsset() {
-    const A = S.asset, box = $("#assetBody");
+    const A = withPending(S.asset), box = $("#assetBody");
     { const FULLN = { "지형": "민지형", "남편": "민지형", "현영": "이현영", "나": "이현영", "소원": "민소원", "구름": "민구름", "깨비": "이깨비" }, nm = v => v == null ? v : String(v).split(/([_\s]+)/).map(t => FULLN[t] || t).join("");
       (A.accounts || []).forEach(a => { a.name = nm(a.name); a.owner = nm(a.owner); });
       (A.fixed || []).forEach(f => { f.name = nm(f.name); f.category = nm(f.category); });
@@ -627,7 +708,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const F = A.fixed || [], ft = F.reduce((s, f) => s + (f.amount || 0), 0), miss = F.filter(f => f.amount == null).length;
     const bo = a => a.bank ? `${a.bank}${a.owner ? `(${a.owner})` : ""}` : (a.owner || "");
     const accRow = (a, nm, sub, gi) => { const main = sub ? (bo(a) || nm) : nm; const extra = sub ? (nm && nm !== a.owner ? nm : "") : bo(a); const note = [extra, a.avail === "Y" ? "바로 사용" : ""].filter(Boolean).join(" · ");
-      return `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(main)}</div>${note ? `<div class="ab">${esc(note)}</div>` : ""}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`; };
+      return `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(main)}${a.pending ? `<span class="tag-pend">반영 대기 ${a.pending > 0 ? "+" : "-"}${Math.abs(a.pending).toLocaleString("ko-KR")}원</span>` : ""}</div>${note ? `<div class="ab">${esc(note)}</div>` : ""}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`; };
     const AG = {}; accs.forEach(a => { const n = (a.name || "").replace(/\\_/g, "_"), i = n.indexOf("_"); const g = i > 0 ? n.slice(0, i).trim() : null; const k = g ? "g:" + g : "s:" + n; (AG[k] ||= { g, items: [] }).items.push({ a, sub: g ? n.slice(i + 1).trim() : n }); });
     const accRows = Object.values(AG).map(x => ({ ...x, sum: x.items.reduce((s, y) => s + y.a.balance, 0) })).sort((p, q) => q.sum - p.sum).map(x => {
       if (!x.g) return accRow(x.items[0].a, x.items[0].sub, false);
@@ -740,11 +821,199 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     if (t !== "home" && t !== "asset") t = "asset";
     document.querySelectorAll("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t));
     $("#pane-asset").hidden = t !== "asset"; $("#pane-home").hidden = t !== "home";
+    $("#inBtn").hidden = t !== "asset"; renderPendBar();
     try { localStorage.setItem("tab", t); } catch {}
     if (location.hash.slice(1) !== t && !["trades","listings","targets","gap","finance"].includes(location.hash.slice(1))) history.replaceState(null, "", "#" + t);
   }
   document.querySelectorAll("[data-tab]").forEach(b => b.onclick = () => showTab(b.dataset.tab));
   document.querySelectorAll("nav.tabs a").forEach(a => a.addEventListener("click", () => showTab("home")));
+
+
+  // ---- 자산 입력 (inbox) ----
+  // 입력 내용은 사이트 비밀번호로 암호화해 GitHub 저장소 inbox/ 에 올린다. 매일 아침 자동 업데이트가 노션에 반영하고 파일을 지운다.
+  let SITEPW = null;
+  const GH = "https://api.github.com/repos/ayamy39-cpu/asset";
+  const tokGet = () => { try { return localStorage.getItem("ghTok") || ""; } catch { return ""; } };
+  const tokSet = v => { try { v ? localStorage.setItem("ghTok", v) : localStorage.removeItem("ghTok"); } catch {} };
+  const ghH = (extra = {}) => { const t = tokGet(); return Object.assign({ Accept: "application/vnd.github+json" }, t ? { Authorization: "Bearer " + t } : {}, extra); };
+  const u8b64 = u => { let s = ""; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); };
+  const keyCache = new Map();
+  async function entryKey(salt, iter) {
+    const k = salt + ":" + iter; if (keyCache.has(k)) return keyCache.get(k);
+    const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(String(SITEPW).normalize("NFC")), "PBKDF2", false, ["deriveKey"]);
+    const key = await crypto.subtle.deriveKey({ name: "PBKDF2", salt: b64(salt), iterations: iter, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+    keyCache.set(k, key); return key;
+  }
+  async function encEntry(obj) {
+    const p = await getPayload(), key = await entryKey(p.salt, p.iter), iv = crypto.getRandomValues(new Uint8Array(12));
+    const ct = new Uint8Array(await crypto.subtle.encrypt({ name: "AES-GCM", iv }, key, new TextEncoder().encode(JSON.stringify(obj))));
+    return JSON.stringify({ v: 1, iter: p.iter, salt: p.salt, iv: u8b64(iv), ct: u8b64(ct) });
+  }
+  async function decEntry(e) {
+    const key = await entryKey(e.salt, e.iter);
+    return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: "AES-GCM", iv: b64(e.iv) }, key, b64(e.ct))));
+  }
+  const FULLN0 = { "지형": "민지형", "남편": "민지형", "현영": "이현영", "나": "이현영", "소원": "민소원", "구름": "민구름", "깨비": "이깨비" };
+  const nmz = v => v == null ? "" : String(v).replace(/\\_/g, "_").split(/([_\s]+)/).map(t => FULLN0[t] || t).join("");
+  const todayK = () => new Date(Date.now() + 9 * 3600e3).toISOString().slice(0, 10);
+  const stamp = () => new Date(Date.now() + 9 * 3600e3).toISOString().replace(/\D/g, "").slice(0, 14) + "-" + Math.random().toString(36).slice(2, 8);
+
+  // 대기 중 항목: {name, sha, kind:"manual"|"file", size, entry?}
+  S.pending = [];
+  function withPending(base) {
+    if (!base) return base;
+    const A = structuredClone(base), man = S.pending.filter(p => p.entry && p.entry.kind === "manual");
+    if (!man.length) return A;
+    const L = A.accountList || [];
+    man.forEach(p => {
+      const e = p.entry, acc = e.account || {}; const meta = L.find(x => x.id === acc.id) || {};
+      (e.rows || []).forEach(r => {
+        const amt = Math.round(+r.amount || 0); if (!amt) return;
+        let a = (A.accounts ||= []).find(x => x.name === (meta.name || acc.name));
+        if (!a) { a = { name: meta.name || acc.name, owner: meta.owner || null, bank: meta.bank || null, avail: meta.avail || null, matured: meta.matured || null, balance: 0 }; A.accounts.push(a); }
+        a.balance += amt; a.pending = (a.pending || 0) + amt;
+        const Y = A.yearly ||= [], y = +String(r.date || "").slice(0, 4);
+        if (y) {
+          let i = Y.findIndex(x => x.year === y);
+          if (i < 0 && (!Y.length || y > Y[Y.length - 1].year)) { const last = Y[Y.length - 1]; Y.push({ year: y, change: 0, end: last ? last.end : (A.opening?.amount || 0) }); i = Y.length - 1; }
+          if (i >= 0) { Y[i].change += amt; for (let j = i; j < Y.length; j++) Y[j].end += amt; }
+        }
+      });
+    });
+    A.accounts.sort((a, b) => b.balance - a.balance);
+    return A;
+  }
+  function renderPendBar() {
+    const bar = $("#pendBar"); if (!bar) return;
+    const n = S.pending.length, onAsset = !$("#pane-asset").hidden;
+    bar.hidden = !n || !onAsset;
+    if (n) { const m = S.pending.filter(p => p.kind === "manual").length, f = n - m;
+      bar.innerHTML = `<span>노션 반영 대기 ${[m ? `직접 입력 ${m}건` : "", f ? `파일 ${f}건` : ""].filter(Boolean).join(" · ")} — 내일 아침 자동 업데이트 때 반영돼요${m ? ". 직접 입력은 아래 잔액에 미리 더해 보여 드려요" : ""}.</span><button type="button" id="pendOpen">보기</button>`;
+      $("#pendOpen").onclick = () => openSheet(); }
+  }
+  async function loadInbox() {
+    try {
+      const r = await fetch(GH + "/contents/inbox", { headers: ghH(), cache: "no-store" });
+      if (r.status === 404) { S.pending = []; return afterInbox(); }
+      if (!r.ok) return;
+      const list = (await r.json()).filter(x => x.type === "file" && /\.json$/.test(x.name));
+      const out = [];
+      for (const x of list) {
+        const it = { name: x.name, sha: x.sha, size: x.size, kind: x.name.startsWith("m-") ? "manual" : "file" };
+        if (it.kind === "manual") { try { const rr = await fetch(GH + "/contents/inbox/" + encodeURIComponent(x.name), { headers: ghH({ Accept: "application/vnd.github.raw+json" }), cache: "no-store" }); it.entry = await decEntry(await rr.json()); } catch { it.kind = "unknown"; } }
+        out.push(it);
+      }
+      S.pending = out; afterInbox();
+    } catch {}
+  }
+  function afterInbox() { renderAsset(); renderPendBar(); if (!$("#inSheet").hidden) renderInList(); }
+
+  // ---- 입력 화면 ----
+  let IN_MODE = "key", IO = -1;
+  function acctOptions() {
+    const A = S.asset || {}; let L = (A.accountList || []).slice();
+    if (!L.length) L = (A.accounts || []).map(a => ({ id: "", name: a.name, owner: a.owner, bank: a.bank }));
+    L.sort((a, b) => ((a.matured === "Y") - (b.matured === "Y")) || String(a.name).localeCompare(String(b.name), "ko"));
+    let last = ""; try { last = localStorage.getItem("inAcct") || ""; } catch {}
+    return `<option value="" disabled${last ? "" : " selected"}>통장을 선택하세요</option>` + L.map(a => { const v = a.id || a.name; const bo = a.bank ? `${a.bank}${a.owner ? `(${nmz(a.owner)})` : ""}` : nmz(a.owner);
+      return `<option value="${esc(v)}" data-name="${esc(a.name)}"${v === last ? " selected" : ""}>${esc(nmz(a.name))}${bo ? " · " + esc(bo) : ""}${a.matured === "Y" ? " (만기)" : ""}</option>`; }).join("");
+  }
+  function renderTok() {
+    const box = $("#tokBox"), t = tokGet();
+    if (t) { box.className = "tokbox on"; box.innerHTML = `<span>GitHub 연결됨 · 입력을 올릴 수 있어요</span><button type="button" class="lk" id="tokReset">토큰 변경</button>`; $("#tokReset").onclick = () => { tokSet(""); renderTok(); }; return; }
+    box.className = "tokbox";
+    box.innerHTML = `<b>처음 한 번만: GitHub 토큰 연결</b>
+      <ol><li><a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub 토큰 만들기</a>를 열어요 (로그인 필요).</li>
+      <li>Token name은 <b>HOME 입력</b>, Expiration은 원하는 기간으로 정해요.</li>
+      <li>Repository access에서 <b>Only select repositories → ayamy39-cpu/asset</b>을 골라요.</li>
+      <li>Permissions → Repository permissions → <b>Contents: Read and write</b>로 바꿔요.</li>
+      <li>Generate token을 누르고, 나온 토큰을 복사해 아래에 붙여 넣어요.</li></ol>
+      <div class="pw"><input id="tokIn" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button class="btn" type="button" id="tokSave">연결</button></div>
+      <p class="hint" style="margin-top:6px">토큰은 이 기기 브라우저에만 저장돼요. 무료이고, 이 저장소에만 쓸 수 있어요.</p>`;
+    $("#tokSave").onclick = async () => {
+      const v = $("#tokIn").value.trim(); if (!v) return; const st = $("#inStat"); st.className = "instat"; st.textContent = "토큰을 확인하는 중…";
+      try { const r = await fetch(GH, { headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + v } }); const j = await r.json();
+        if (!r.ok) throw new Error(j.message || r.status); if (!j.permissions?.push) throw new Error("쓰기 권한 없음");
+        tokSet(v); renderTok(); st.className = "instat ok"; st.textContent = "연결했어요. 이제 입력을 올릴 수 있어요."; }
+      catch (er) { st.className = "instat bad"; st.textContent = "토큰을 확인하지 못했어요 (" + (er.message === "쓰기 권한 없음" ? "Contents 권한이 Read and write인지 확인해 주세요" : "토큰 값을 다시 확인해 주세요") + ")."; }
+    };
+  }
+  function renderInList() {
+    const box = $("#inList"), A = S.asset || {}, log = (A.inboxLog || []).slice(0, 8);
+    let h = "";
+    if (S.pending.length) {
+      h += `<h3>반영 대기 (${S.pending.length}건)</h3>` + S.pending.map(p => {
+        const e = p.entry;
+        if (p.kind === "manual" && e) { const r = (e.rows || [])[0] || {}; const an = (A.accountList || []).find(x => x.id === e.account?.id)?.name || e.account?.name;
+          return `<div class="inrow"><div>${esc(r.memo || "")}<div class="s">${esc(fd(r.date))} · ${esc(nmz(an))}</div></div><div class="r"><b class="num ${r.amount > 0 ? "up" : "down"}">${r.amount > 0 ? "+" : ""}${Math.round(r.amount).toLocaleString("ko-KR")}원</b><div><button type="button" class="lk" data-cancel="${esc(p.name)}">취소</button></div></div></div>`; }
+        return `<div class="inrow"><div>파일 업로드<div class="s">${esc(p.name.slice(2, 6) + "." + p.name.slice(6, 8) + "." + p.name.slice(8, 10))} · ${(p.size / 1048576).toFixed(1)}MB(암호화)</div></div><div class="r"><span class="s">내일 아침 반영</span><div><button type="button" class="lk" data-cancel="${esc(p.name)}">취소</button></div></div></div>`;
+      }).join("");
+    }
+    if (log.length) h += `<h3>최근 반영 내역</h3>` + log.map(l => `<div class="inrow"><div>${esc(l.kind === "file" ? "파일" : "직접 입력")} · ${esc(nmz(l.account || ""))}<div class="s">${esc(l.at ? l.at.slice(0, 10).replace(/-/g, ".") : "")}${l.note ? " · " + esc(l.note) : ""}</div></div><div class="r">${l.added != null ? `추가 ${l.added}건` : ""}${l.skipped ? `<div class="s">중복 ${l.skipped}건</div>` : ""}${l.review ? `<div class="s" style="color:var(--up)">확인 필요 ${l.review}건</div>` : ""}</div></div>`).join("");
+    box.innerHTML = h;
+  }
+  function setMode(m) { IN_MODE = m; document.querySelectorAll("[data-in]").forEach(b => b.setAttribute("aria-selected", b.dataset.in === m)); $("#keyForm").hidden = m !== "key"; $("#fileForm").hidden = m !== "file"; }
+  function openSheet() {
+    document.querySelectorAll(".acctSel").forEach(sel => sel.innerHTML = acctOptions());
+    if (!$("#kDate").value) $("#kDate").value = todayK();
+    $("#inStat").textContent = ""; renderTok(); renderInList();
+    $("#inSheet").hidden = false; document.body.style.overflow = "hidden";
+    loadInbox();
+  }
+  function closeSheet() { $("#inSheet").hidden = true; document.body.style.overflow = ""; }
+  $("#inBtn").onclick = openSheet;
+  $("#inSheet").addEventListener("click", async e => {
+    if (e.target.closest("[data-close]")) return closeSheet();
+    const m = e.target.closest("[data-in]"); if (m) return setMode(m.dataset.in);
+    const io = e.target.closest("[data-io]"); if (io) { IO = +io.dataset.io; document.querySelectorAll("[data-io]").forEach(b => b.setAttribute("aria-pressed", b === io)); return; }
+    const c = e.target.closest("[data-cancel]"); if (c) {
+      const p = S.pending.find(x => x.name === c.dataset.cancel); if (!p) return; const st = $("#inStat");
+      if (!tokGet()) { st.className = "instat bad"; st.textContent = "취소하려면 먼저 GitHub 토큰을 연결해 주세요."; return; }
+      c.disabled = true;
+      try { const r = await fetch(GH + "/contents/inbox/" + encodeURIComponent(p.name), { method: "DELETE", headers: ghH(), body: JSON.stringify({ message: "inbox: 입력 취소", sha: p.sha }) }); if (!r.ok) throw 0;
+        S.pending = S.pending.filter(x => x !== p); afterInbox(); st.className = "instat ok"; st.textContent = "취소했어요."; }
+      catch { c.disabled = false; st.className = "instat bad"; st.textContent = "취소하지 못했어요. 잠시 후 다시 시도해 주세요."; }
+    }
+  });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#inSheet").hidden) closeSheet(); });
+  document.querySelectorAll(".acctSel").forEach(sel => sel.addEventListener("change", () => { try { localStorage.setItem("inAcct", sel.value); } catch {} document.querySelectorAll(".acctSel").forEach(o => { if (o !== sel) o.value = sel.value; }); }));
+  $("#kAmt").addEventListener("input", e => { const d = e.target.value.replace(/\D/g, "").replace(/^0+(?=\d)/, ""); e.target.value = d ? (+d).toLocaleString("ko-KR") : ""; });
+  $("#fFiles").addEventListener("change", e => { const fs = [...e.target.files]; $("#fList").innerHTML = fs.map(f => `<div>· ${esc(f.name)} (${(f.size / 1048576).toFixed(1)}MB)</div>`).join(""); });
+  const selAcct = form => { const sel = form.querySelector(".acctSel"), o = sel.selectedOptions[0]; return sel.value ? { id: /^[0-9a-f]{32}$/.test(sel.value) ? sel.value : "", name: o?.dataset.name || sel.value } : null; };
+  async function upload(prefix, entry) {
+    const body = await encEntry(entry), name = prefix + stamp() + ".json";
+    const r = await fetch(GH + "/contents/inbox/" + name, { method: "PUT", headers: ghH(), body: JSON.stringify({ message: "inbox: 입력 1건", content: btoa(body) }) });
+    const j = await r.json().catch(() => ({})); if (!r.ok) throw new Error(r.status === 401 ? "토큰이 만료됐거나 맞지 않아요. 토큰을 다시 연결해 주세요." : r.status === 403 || r.status === 404 ? "토큰에 이 저장소 쓰기 권한이 없어요." : "업로드하지 못했어요 (" + r.status + ").");
+    return { name, sha: j.content?.sha, size: body.length };
+  }
+  function busy(form, on) { const b = form.querySelector("button[type=submit]"); b.disabled = on; b.textContent = on ? "올리는 중…" : (form.id === "keyForm" ? "입력하기" : "올리기"); }
+  $("#keyForm").addEventListener("submit", async e => {
+    e.preventDefault(); const st = $("#inStat"), f = e.currentTarget;
+    if (!tokGet()) { st.className = "instat bad"; st.textContent = "먼저 위에서 GitHub 토큰을 연결해 주세요."; return; }
+    const acct = selAcct(f), amt = +$("#kAmt").value.replace(/\D/g, ""), date = $("#kDate").value, memo = $("#kMemo").value.trim();
+    if (!acct || !amt || !date || !memo) { st.className = "instat bad"; st.textContent = "통장, 금액, 날짜, 메모를 모두 입력해 주세요."; return; }
+    const entry = { kind: "manual", createdAt: new Date().toISOString(), account: acct, rows: [{ date, amount: IO * amt, memo }] };
+    busy(f, true); st.className = "instat"; st.textContent = "암호화해서 올리는 중…";
+    try { const r = await upload("m-", entry); S.pending.push({ ...r, kind: "manual", entry }); afterInbox();
+      st.className = "instat ok"; st.textContent = `입력했어요. 잔액에 바로 반영했고, 노션에는 내일 아침에 반영돼요.`; $("#kAmt").value = ""; $("#kMemo").value = ""; }
+    catch (er) { st.className = "instat bad"; st.textContent = er.message || "업로드하지 못했어요."; }
+    busy(f, false);
+  });
+  $("#fileForm").addEventListener("submit", async e => {
+    e.preventDefault(); const st = $("#inStat"), f = e.currentTarget;
+    if (!tokGet()) { st.className = "instat bad"; st.textContent = "먼저 위에서 GitHub 토큰을 연결해 주세요."; return; }
+    const acct = selAcct(f), fs = [...$("#fFiles").files];
+    if (!acct || !fs.length) { st.className = "instat bad"; st.textContent = "통장과 파일을 선택해 주세요."; return; }
+    const total = fs.reduce((s, x) => s + x.size, 0); if (total > 12 * 1048576) { st.className = "instat bad"; st.textContent = "파일이 너무 커요. 한 번에 12MB까지 올릴 수 있어요."; return; }
+    busy(f, true); st.className = "instat"; st.textContent = "암호화해서 올리는 중…";
+    try {
+      const files = []; for (const x of fs) files.push({ name: x.name, type: x.type || "", size: x.size, data: u8b64(new Uint8Array(await x.arrayBuffer())) });
+      const entry = { kind: "file", createdAt: new Date().toISOString(), account: acct, memo: $("#fMemo").value.trim(), files };
+      const r = await upload("f-", entry); S.pending.push({ ...r, kind: "file" }); afterInbox();
+      st.className = "instat ok"; st.textContent = `파일 ${fs.length}개를 올렸어요. 내일 아침 자동 업데이트 때 노션과 사이트에 반영돼요.`; $("#fFiles").value = ""; $("#fList").innerHTML = ""; $("#fMemo").value = "";
+    } catch (er) { st.className = "instat bad"; st.textContent = er.message || "업로드하지 못했어요."; }
+    busy(f, false);
+  });
 
   // ---- unlock ----
   const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
@@ -758,7 +1027,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   }
   async function unlock(pw, remember) {
     const d = await decrypt(pw);
-    S.asset = d.asset || null;
+    S.asset = d.asset || null; SITEPW = pw;
     S.trades = d.trades || []; S.listings = d.listings || []; S.targets = (d.targets || []).sort((a, b) => (a.createdAt || "").localeCompare(b.createdAt || "")); S.meta = d.meta;
     try { (remember ? localStorage : sessionStorage).setItem("pw", pw); } catch {}
     $("#gate").hidden = true; $("#app").hidden = false;
@@ -770,6 +1039,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     renderAll(); renderAsset();
     { const h = location.hash.slice(1); let t = null; try { t = localStorage.getItem("tab"); } catch {} showTab(h === "home" || ["trades","listings","targets","gap","finance"].includes(h) ? "home" : h === "asset" ? "asset" : (t || "asset")); }
     if (S.fin?.targetId) $("#fTarget").value = S.fin.targetId;
+    loadInbox();
   }
   $("#gateForm").addEventListener("submit", async e => {
     e.preventDefault(); $("#err").textContent = ""; $("#go").disabled = true;
