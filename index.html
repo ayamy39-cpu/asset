@@ -930,6 +930,25 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       bar.innerHTML = `<span>노션 반영 대기 ${[m ? `직접 입력 ${m}건` : "", f ? `파일 ${f}건` : ""].filter(Boolean).join(" · ")} — 내일 아침 자동 업데이트 때 반영돼요${m ? ". 직접 입력은 아래 잔액에 미리 더해 보여 드려요" : ""}.</span><button type="button" id="pendOpen">보기</button>`;
       $("#pendOpen").onclick = () => openSheet(); }
   }
+  // 공유 키: 한 기기에서 연결한 GitHub 토큰을 사이트 비밀번호로 암호화해 저장소(ghkey.enc.json)에 보관하고, 다른 기기는 잠금 해제 때 풀어서 쓴다.
+  const KEYF = "ghkey.enc.json";
+  async function putKey(t) {
+    let sha; const g = await fetch(GH + "/contents/" + KEYF, { headers: ghH(), cache: "no-store" }); if (g.ok) sha = (await g.json()).sha;
+    const body = await encEntry({ tok: t, at: new Date().toISOString() });
+    const r = await fetch(GH + "/contents/" + KEYF, { method: "PUT", headers: ghH(), body: JSON.stringify(Object.assign({ message: "입력 키 보관(암호화)", content: btoa(body) }, sha ? { sha } : {})) });
+    if (!r.ok) throw new Error(r.status);
+  }
+  async function syncKey() {
+    try {
+      const t = tokGet();
+      if (t) { const g = await fetch(GH + "/contents/" + KEYF, { headers: ghH(), cache: "no-store" }); if (g.status === 404) await putKey(t); return; }
+      let j = null;
+      try { const r = await fetch(KEYF + "?t=" + Date.now(), { cache: "no-store" }); if (r.ok) j = await r.json(); } catch {}
+      if (!j) { const r = await fetch(GH + "/contents/" + KEYF, { headers: { Accept: "application/vnd.github.raw+json" }, cache: "no-store" }); if (r.ok) j = await r.json(); }
+      if (!j) return;
+      const o = await decEntry(j); if (o && o.tok) { tokSet(o.tok); if (!$("#inSheet").hidden) renderTok(); }
+    } catch {}
+  }
   async function loadInbox() {
     try {
       const r = await fetch(GH + "/contents/inbox", { headers: ghH(), cache: "no-store" });
@@ -968,12 +987,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       <li>Permissions → Repository permissions → <b>Contents: Read and write</b>로 바꿔요.</li>
       <li>Generate token을 누르고, 나온 토큰을 복사해 아래에 붙여 넣어요.</li></ol>
       <div class="pw"><input id="tokIn" type="password" placeholder="github_pat_…" autocomplete="off" spellcheck="false"><button class="btn" type="button" id="tokSave">연결</button></div>
-      <p class="hint" style="margin-top:6px">토큰은 이 기기 브라우저에만 저장돼요. 무료이고, 이 저장소에만 쓸 수 있어요.</p>`;
+      <p class="hint" style="margin-top:6px">한 번만 연결하면 돼요. 토큰은 사이트 비밀번호로 잠가 보관해서, 다른 기기에서는 비밀번호만 넣으면 자동으로 연결돼요. 무료이고, 이 저장소에만 쓸 수 있어요.</p>`;
     $("#tokSave").onclick = async () => {
       const v = $("#tokIn").value.trim(); if (!v) return; const st = $("#inStat"); st.className = "instat"; st.textContent = "토큰을 확인하는 중…";
       try { const r = await fetch(GH, { headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + v } }); const j = await r.json();
         if (!r.ok) throw new Error(j.message || r.status); if (!j.permissions?.push) throw new Error("쓰기 권한 없음");
-        tokSet(v); renderTok(); st.className = "instat ok"; st.textContent = "연결했어요. 이제 입력을 올릴 수 있어요."; }
+        tokSet(v); renderTok(); st.className = "instat ok"; st.textContent = "연결했어요. 이제 입력을 올릴 수 있어요. 다른 기기에서도 사이트 비밀번호만 넣으면 자동으로 연결돼요.";
+        putKey(v).catch(() => {}); }
       catch (er) { st.className = "instat bad"; st.textContent = "토큰을 확인하지 못했어요 (" + (er.message === "쓰기 권한 없음" ? "Contents 권한이 Read and write인지 확인해 주세요" : "토큰 값을 다시 확인해 주세요") + ")."; }
     };
   }
@@ -1078,7 +1098,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     renderAll(); renderAsset();
     { const h = location.hash.slice(1); let t = null; try { t = localStorage.getItem("tab"); } catch {} showTab(h === "home" || ["trades","listings","targets","gap","finance"].includes(h) ? "home" : h === "asset" ? "asset" : (t || "asset")); }
     if (S.fin?.targetId) $("#fTarget").value = S.fin.targetId;
-    loadInbox();
+    syncKey().finally(loadInbox);
   }
   $("#gateForm").addEventListener("submit", async e => {
     e.preventDefault(); $("#err").textContent = ""; $("#go").disabled = true;
