@@ -312,6 +312,12 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .totall{font-size:15px;font-weight:500;color:var(--sub);letter-spacing:0;white-space:nowrap}
 .tag-ok,.tag-ng,.tag-yr{font-style:normal;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap}
 .tag-ok{color:#1d7a46;background:#e3f4ea}.tag-ng{color:#b5321f;background:#fbe7e3}.tag-yr{color:var(--sub);background:var(--tint);margin:0 6px 0 0}
+.benbtn{font:inherit;font-size:11px;font-weight:700;color:var(--accent-ink);background:var(--tint);border:1px solid var(--line);border-radius:999px;padding:2px 8px;margin-left:6px;cursor:pointer;vertical-align:1px;white-space:nowrap}
+.benbtn:hover{border-color:var(--accent)}
+.ben-sec{margin:14px 0 0}.ben-sec h3{font-size:13px;margin:0 0 6px;color:var(--sub)}
+.ben-sec ul{margin:0;padding-left:18px;font-size:14px;line-height:1.6}
+.ben-meta{display:flex;flex-wrap:wrap;gap:6px;font-size:12px}.ben-meta span{background:var(--tint);border-radius:999px;padding:3px 9px}
+.ben-warn{font-size:12px;color:var(--faint);margin-top:14px;line-height:1.5}
 .permo{display:block;font-size:11.5px;color:var(--faint);text-align:right}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -471,6 +477,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     <div>실거래: 국토교통부 실거래가 기반 · 매물: 네이버 부동산(사용자 캡처), KB·리치고 · 규제: 금융위원회 발표</div>
   </footer>
 </div>
+</div>
+
+<div class="sheet" id="benSheet" hidden>
+  <div class="sheet-bg" data-bclose></div>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="benTitle">
+    <div class="sheet-hd"><h2 id="benTitle">카드 혜택</h2><button type="button" class="xbtn" data-bclose aria-label="닫기">✕</button></div>
+    <div id="benBody"></div>
+  </div>
 </div>
 
 <div class="sheet" id="inSheet" hidden>
@@ -703,9 +717,45 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   $("#addDebt").onclick = () => { const f = readFin(); f.debts.push({ name: "", bal: 0, rate: 5, mon: "", repay: false }); renderDebts(f.debts); save(); };
   $("#debts").addEventListener("click", e => { const i = e.target.dataset.rm; if (i == null) return; const f = readFin(); f.debts.splice(+i, 1); renderDebts(f.debts); save(); });
 
+
+  // ---- card benefits popup ----
+  const BEN = {
+    "현대카드": { name: "현대_대한항공카드", perf: "전월 50만원 이상", meta: ["대한항공 스카이패스 적립"],
+      secs: [["마일리지 적립", ["국내 가맹점 1,000원당 1마일", "해외 가맹점 · 대한항공 직판 항공권 1,000원당 2마일 이상(등급별 상이)"]],
+             ["대한항공 혜택", ["대한항공 직판 국제선 항공권 할인쿠폰(연 1회 이상, 등급별 상이)", "조건 충족 시 연간 보너스 마일리지"]],
+             ["상위 등급(300 이상)", ["공항 라운지 이용 등 추가 혜택"]]],
+      warn: "카드 등급(030·060·120·300·the First 등)에 따라 적립률·쿠폰·연회비가 달라요. 등급 알려주시면 정확히 맞춰 드릴게요." },
+    "우리카드": { name: "우리_V카드", perf: "전월 30만원 이상", meta: ["카드의정석 NEW우리V카드 기준"],
+      secs: [["생활 할인", ["대형마트 · 백화점 · 주유 등 5% 청구할인"]],
+             ["외식 · 카페 · 문화", ["아웃백 등 패밀리레스토랑 25% 할인", "스타벅스 · 탐앤탐스 등 카페 20% 할인", "CGV 6,000원 할인"]],
+             ["금융", ["우리은행 수수료 면제(월 10회)", "환전 수수료 우대"]]],
+      warn: "할인마다 월 한도가 있고, 실적 구간별로 한도가 달라요." },
+    "삼성카드": { name: "삼성_CJ임직원카드", perf: "전월 30만원 이상", meta: ["CJ ONE 포인트 적립", "CJ 삼성 iD 카드 기준"],
+      secs: [["CJ 계열 할인", ["CJ온스타일 7% (월 5만원 한도)", "빕스 20% (월 4만원 한도)", "올리브영 · 뚜레쥬르 10% (각 월 1만원 한도)", "티빙 30% (월 5천원 한도)", "CGV 최대 8,000원 (월 1회)"]],
+             ["생활 할인", ["통신요금 5%", "편의점 5%"]]],
+      warn: "임직원 전용 카드는 일반 CJ 삼성카드와 혜택이 다를 수 있어요. 카드 앱의 상품설명서로 확인해 주세요." },
+    "신한카드": { name: "신한_아이사랑카드", perf: "실적 조건은 카드 앱에서 확인", meta: ["현재 '신한 아이행복카드'로 통합"],
+      secs: [["보육 바우처", ["보육료 · 유아학비 정부 지원 바우처 결제", "어린이집 · 유치원 비용 결제용"]],
+             ["참고", ["아이사랑카드 · 아이즐거운카드는 아이행복카드로 통합 운영돼요(2021년 4월 신규 발급 중단)"]]],
+      warn: "부가 할인(병원 · 학원 · 마트 등)은 발급 시기마다 달라서 정확한 정보를 찾지 못했어요." }
+  };
+  const benBtn = card => BEN[card] ? `<button type="button" class="benbtn" data-ben="${esc(card)}" aria-label="${esc(BEN[card].name)} 혜택 보기">혜택</button>` : "";
+  function openBen(card) {
+    const b = BEN[card]; if (!b) return;
+    $("#benTitle").textContent = b.name;
+    $("#benBody").innerHTML = `<div class="ben-meta"><span>실적 ${esc(b.perf)}</span>${b.meta.map(m => `<span>${esc(m)}</span>`).join("")}</div>`
+      + b.secs.map(([h, li]) => `<div class="ben-sec"><h3>${esc(h)}</h3><ul>${li.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`).join("")
+      + `<p class="ben-warn">${esc(b.warn)}<br>카드사 공개 정보 기준 요약이에요. 혜택은 바뀔 수 있으니 카드사 앱에서 꼭 확인해 주세요.</p>`;
+    $("#benSheet").hidden = false; document.body.style.overflow = "hidden";
+    $("#benSheet .xbtn").focus();
+  }
+  function closeBen() { $("#benSheet").hidden = true; document.body.style.overflow = ""; }
+  $("#benSheet").addEventListener("click", e => { if (e.target.closest("[data-bclose]")) closeBen(); });
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && !$("#benSheet").hidden) closeBen(); });
   // ---- asset tab ----
   const OPEN_G = new Set(), OPEN_F = new Set();
   document.addEventListener("click", e => {
+    const bn = e.target.closest("[data-ben]"); if (bn) { e.stopPropagation(); return openBen(bn.dataset.ben); }
     const r = e.target.closest("tr.agrp"); if (r) { const g = r.dataset.g; OPEN_G.has(g) ? OPEN_G.delete(g) : OPEN_G.add(g); return renderAsset(); }
     const f = e.target.closest(".fgh[data-fg]"); if (f) { const g = f.dataset.fg; OPEN_F.has(g) ? OPEN_F.delete(g) : OPEN_F.add(g); renderAsset(); }
   });
@@ -820,7 +870,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const CP = (M && M.cardPerf) || [], perfOf = c => CP.find(p => p.card === c.card);
     const perfTag = (amt, target) => amt >= target ? `<em class="tag-ok">충족</em>` : `<em class="tag-ng">미충족</em>`;
     const cardBody = CARDS.length ? CARDS.map(c => { const k2 = "m:card|" + c.card, o2 = OPEN_F.has(k2);
-      return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(perfOf(c) ? perfOf(c).name : (CARDNM[c.card] || c.card))} <small>${(c.items || []).length}건</small>${perfOf(c) ? perfTag(Math.abs(c.amount || 0), perfOf(c).target) : ""}</span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
+      return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(perfOf(c) ? perfOf(c).name : (CARDNM[c.card] || c.card))} <small>${(c.items || []).length}건</small>${perfOf(c) ? perfTag(Math.abs(c.amount || 0), perfOf(c).target) : ""}${benBtn(c.card)}</span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
     const SV = M && M.savings ? M.savings : null, sgnW = v => (v > 0 ? "+" : v < 0 ? "-" : "") + CW(Math.abs(v));
     const savHTML = !SV ? ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.") : `<div class="savbig"><b class="num ${SV.amount < 0 ? "down" : "up"}">${sgnW(SV.amount)}</b><span class="num">(${String(SV.year).slice(2)}년 평균 ${sgnW(SV.avg)})</span></div><p class="note" style="margin:4px 0 10px">공금·적금 통장의 전월 대비 증가액이에요. 예금으로 옮기거나 예금에서 들어온 돈은 계산에서 뺐어요.</p>`
       + cgrp("m:sav", `${SV.year}년 월별 저축`, null, (SV.months || []).length, (SV.months || []).map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월</span><span class="num ${x.amount < 0 ? "down" : ""}">${sgnW(x.amount)}</span></div>`).join(""));
@@ -832,13 +882,6 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div><div class="sh"><h2>월별 비용</h2><span class="src num">${mLbl} 기준 · 합계 <b style="color:var(--ink)">${CW(costT)}</b></span></div>${costHTML}</div>
         <div><div class="sh"><h2>월별 저축</h2><span class="src num">${SV ? `${mLbl} 기준` : "준비 중"}</span></div>${savHTML}</div>
       </section>
-      ${CP.length ? `<section>
-        <div class="sh"><h2>카드 실적</h2><span class="src">결제 금액 기준 · ${esc(String((CP[0].months || []).slice(-1)[0]?.ym || "").slice(0, 4))}년</span></div>
-        <div class="perf">${CP.map(p => { const ms = (p.months || []).slice().reverse(), ok = ms.filter(x => x.amount >= p.target).length, last = ms[0];
-          const k = "p:" + p.card, op = OPEN_F.has(k);
-          return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(p.name)} <small>기준 ${CW(p.target)} · ${ms.length}개월 중 ${ok}개월 충족 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${last ? `${+last.ym.slice(5)}월 ${CW(last.amount)}${perfTag(last.amount, p.target)}` : "–"}</span></div>${op ? ms.map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월 결제</span><span class="num">${CW(x.amount)}${perfTag(x.amount, p.target)}</span></div>`).join("") : ""}</div>`; }).join("")}</div>
-        <p class="note" style="margin-top:8px">통장에서 빠져나간 카드 결제 금액(전월 이용분)으로 판단해요. 카드사가 실적에서 빼는 항목(연회비·할부이자 등)은 반영되지 않아요.</p>
-      </section>` : ""}
       <section>
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
@@ -850,6 +893,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div class="sh"><h2>통장별 잔액</h2><span class="src">${accs.length}개 · 잔액 있는 통장</span></div><div class="tw"><table class="acct"><thead><tr><th>통장</th><th class="r">잔액</th><th class="r">비중</th></tr></thead><tbody>${accRows}</tbody></table></div>
       </section>
       ${stocks.length ? `<section><div class="sh"><h2>보유 주식</h2><span class="src">현재가는 노션 입력값</span></div><div class="tw"><table><thead><tr><th>종목</th><th class="r">수량</th><th class="r">매수가</th><th class="r">현재가</th><th class="r">수익률</th><th class="r">평가액</th></tr></thead><tbody>${stRows}</tbody></table></div></section>` : ""}
+      ${CP.length ? `<section>
+        <div class="sh"><h2>카드 실적</h2><span class="src">결제 금액 기준 · ${esc(String((CP[0].months || []).slice(-1)[0]?.ym || "").slice(0, 4))}년</span></div>
+        <div class="perf">${CP.map(p => { const ms = (p.months || []).slice().reverse(), ok = ms.filter(x => x.amount >= p.target).length, last = ms[0];
+          const k = "p:" + p.card, op = OPEN_F.has(k);
+          return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(p.name)}${benBtn(p.card)} <small>기준 ${CW(p.target)} · ${ms.length}개월 중 ${ok}개월 충족 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${last ? `${+last.ym.slice(5)}월 ${CW(last.amount)}${perfTag(last.amount, p.target)}` : "–"}</span></div>${op ? ms.map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월 결제</span><span class="num">${CW(x.amount)}${perfTag(x.amount, p.target)}</span></div>`).join("") : ""}</div>`; }).join("")}</div>
+        <p class="note" style="margin-top:8px">통장에서 빠져나간 카드 결제 금액(전월 이용분)으로 판단해요. 카드사가 실적에서 빼는 항목(연회비·할부이자 등)은 반영되지 않아요.</p>
+      </section>` : ""}
       ${(A.notes || []).filter(n => !/주식/.test(n)).length ? `<p class="note" style="padding-bottom:8px">${A.notes.filter(n => !/주식/.test(n)).map(esc).join(" · ")}</p>` : ""}`;
   }
   const shortWon = v => (v > 0 ? "+" : v < 0 ? "-" : "") + (Math.abs(v) >= 1e8 ? (Math.abs(v) / 1e8).toFixed(2).replace(/\.?0+$/, "") + "억" : Math.round(Math.abs(v) / 1e4).toLocaleString("ko-KR") + "만");
