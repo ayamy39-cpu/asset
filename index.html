@@ -304,6 +304,10 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .hero .hpair>div{min-width:0}
 .hero .big.loan{color:var(--sub)}
 #gap .sh{flex-wrap:wrap;gap:10px}
+.grow .need{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;margin-top:8px;padding:9px 12px;border-radius:10px;background:var(--accent-soft);font-size:13.5px;color:var(--accent-ink)}
+.grow .need b{font-size:16px;color:var(--ink)}
+.grow .need{order:4}
+.grow .need .nf{color:var(--sub);font-size:12.5px}
 #gap .seg button{white-space:nowrap;padding:8px 12px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
@@ -419,6 +423,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     </div>
     <div class="gaps" id="gapRows"></div>
     <p class="note">우리집 기준: <span class="num" id="homeBasis">–</span></p>
+    <p class="note" id="needNote" hidden></p>
   </section>
 
   <section id="finance">
@@ -623,8 +628,12 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const gs = gapList();
     if (!gs.length) { $("#gapRows").innerHTML = `<div class="empty">관심 단지 가격이 들어오면 자동으로 계산돼요.</div>`; return; }
     const mx = Math.max(...gs.map(g => Math.abs(g.gap)), 1);
+    const M = S.asset && S.asset.mortgage, rem = M && M.amount ? Math.round((M.amount - (M.months || []).reduce((t, m) => t + (m.principal || 0), 0) - (M.prepaid || 0)) / 10000) : null;
     $("#gapRows").innerHTML = gs.sort((a, b) => b.gap - a.gap).map(g => `<div class="grow"><div><div class="n">${esc(g.name)} ${esc(g.py)}</div><div class="h num">${won(g.v)} · ${esc(g.how)}</div></div>
-      <div class="bar"><span style="width:${(Math.abs(g.gap) / mx * 100).toFixed(1)}%;${g.gap < 0 ? "background:var(--down)" : ""}"></span></div><div class="amt num ${g.gap >= 0 ? "up" : "down"}">${sgn(g.gap)}</div></div>`).join("");
+      <div class="bar"><span style="width:${(Math.abs(g.gap) / mx * 100).toFixed(1)}%;${g.gap < 0 ? "background:var(--down)" : ""}"></span></div><div class="amt num ${g.gap >= 0 ? "up" : "down"}">${sgn(g.gap)}</div>
+      ${rem != null ? `<div class="need"><span>필요 대출</span><b class="num">${won(Math.max(0, rem + g.gap))}</b><span class="nf num">잔여 대출 ${won(rem)} ${g.gap >= 0 ? "+" : "−"} 차이 ${won(Math.abs(g.gap))}</span></div>` : ""}</div>`).join("");
+    $("#needNote").hidden = rem == null;
+    if (rem != null) $("#needNote").textContent = `필요 대출 = 현재 주담대 잔여 ${won(rem)} + 우리집과의 금액 차이 (위에서 고른 기준). 취득세·중개수수료·이사비와 보유 현금은 빼고 계산한 단순 합이에요. 정확한 한도·월 상환액은 아래 자금 조달 계산에서 확인하세요.`;
   }
 
   // ---- finance ----
