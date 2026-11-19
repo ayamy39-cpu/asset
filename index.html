@@ -971,7 +971,8 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   function acctOptions() {
     const A = S.asset || {}; let L = (A.accountList || []).slice();
     if (!L.length) L = (A.accounts || []).map(a => ({ id: "", name: a.name, owner: a.owner, bank: a.bank }));
-    L.sort((a, b) => ((a.matured === "Y") - (b.matured === "Y")) || String(a.name).localeCompare(String(b.name), "ko"));
+    if (L.some(a => a.matured === "N")) L = L.filter(a => a.matured === "N");
+    L.sort((a, b) => String(a.name).localeCompare(String(b.name), "ko"));
     let last = ""; try { last = localStorage.getItem("inAcct") || ""; } catch {}
     return `<option value="" disabled${last ? "" : " selected"}>통장을 선택하세요</option>` + L.map(a => { const v = a.id || a.name; const bo = a.bank ? `${a.bank}${a.owner ? `(${nmz(a.owner)})` : ""}` : nmz(a.owner);
       return `<option value="${esc(v)}" data-name="${esc(a.name)}"${v === last ? " selected" : ""}>${esc(nmz(a.name))}${bo ? " · " + esc(bo) : ""}${a.matured === "Y" ? " (만기)" : ""}</option>`; }).join("");
