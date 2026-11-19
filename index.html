@@ -769,7 +769,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       const G = {}; list.forEach(f => (G[f.category || "기타"] ||= []).push(f));
       return Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + ((f.m ?? f.amount) || 0), 0)]).sort((a, b) => b[2] - a[2]).map(([g, arr, sum]) => {
         const k = pfx + g, op = OPEN_F.has(k);
-        const item = (f, label) => `<div class="fitem"><span>${esc(label)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : f.yearly ? `<em class="tag-yr">연납</em>${CW(f.amount)}<small class="permo">월 ${CW(f.m)}</small>` : CW(f.amount)}</span></div>`;
+        const item = (f, label) => `<div class="fitem"><span>${esc(label)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : f.yearly ? `<em class="tag-yr">연납</em>${CW(Math.round(f.m))}<small class="permo">연 ${CW(f.amount)} 납부</small>` : CW(f.amount)}</span></div>`;
         const who = f => { const t = String(f.name).split(/[\s_]+/); return t.length > 1 && PEOPLE.has(t[0]) ? t[0] : null; };
         let body;
         if (arr.some(who)) {
@@ -817,7 +817,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const cgrp = (k, title, sum, cnt, body) => { const op = OPEN_F.has(k); return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(title)} <small>${cnt}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${sum == null ? "–" : CW(sum)}</span></div>${op ? body : ""}</div>`; };
     const CARDS = M && M.cards ? M.cards : [], cardT = CARDS.reduce((s, c) => s + Math.abs(c.amount || 0), 0);
     const CP = (M && M.cardPerf) || [], perfOf = c => CP.find(p => p.card === c.card);
-    const perfTag = (amt, target) => amt >= target ? `<em class="tag-ok">실적충족</em>` : `<em class="tag-ng">실적미충족</em>`;
+    const perfTag = (amt, target) => amt >= target ? `<em class="tag-ok">충족</em>` : `<em class="tag-ng">미충족</em>`;
     const cardBody = CARDS.length ? CARDS.map(c => { const k2 = "m:card|" + c.card, o2 = OPEN_F.has(k2);
       return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(perfOf(c) ? perfOf(c).name : c.card)} <small>${(c.items || []).length}건</small>${perfOf(c) ? perfTag(Math.abs(c.amount || 0), perfOf(c).target) : ""}</span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
     const SV = M && M.savings ? M.savings : null, sgnW = v => (v > 0 ? "+" : v < 0 ? "-" : "") + CW(Math.abs(v));
