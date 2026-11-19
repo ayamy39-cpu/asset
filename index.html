@@ -303,6 +303,8 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .hero .hpair{display:flex;gap:40px;flex-wrap:wrap;align-items:flex-start}
 .hero .hpair>div{min-width:0}
 .hero .big.loan{color:var(--sub)}
+#gap .sh{flex-wrap:wrap;gap:10px}
+#gap .seg button{white-space:nowrap;padding:8px 12px}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -413,7 +415,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 
   <section id="gap">
     <div class="sh"><h2>우리집과 금액 차이</h2>
-      <div class="seg" role="group" aria-label="기준"><button type="button" data-basis="list" aria-pressed="true">호가 평균</button><button type="button" data-basis="trade" aria-pressed="false">최근 실거래</button></div>
+      <div class="seg" role="group" aria-label="기준"><button type="button" data-basis="list" aria-pressed="true">호가 평균</button><button type="button" data-basis="min" aria-pressed="false">매물 최저가</button><button type="button" data-basis="trade" aria-pressed="false">최근 실거래</button></div>
     </div>
     <div class="gaps" id="gapRows"></div>
     <p class="note">우리집 기준: <span class="num" id="homeBasis">–</span></p>
@@ -544,6 +546,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
   const homeLists = () => S.listings.filter(l => home(l.complex));
   function homeValue() {
     if (S.basis === "list") { const l = latest(homeLists().filter(l => l.avg)); if (l) return { v: l.avg, how: `33평 호가 평균 ${won(l.avg)} (${fd(l.date)})` }; }
+    if (S.basis === "min") { const l = latest(homeLists().filter(l => l.min)); if (l) return { v: l.min, how: `33평 매물 최저가 ${won(l.min)} (${fd(l.date)})` }; }
     const t = latest(homeTrades().filter(is33)); return t ? { v: t.price, how: `33평 최근 실거래 ${won(t.price)} (${fd(t.date)})` } : null;
   }
   function targetValue(tg) {
@@ -551,6 +554,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const ls = latest(S.listings.filter(l => l.complex === tg.id && (l.pyAvg || l.avg)));
     const lv = ls ? (ls.pyAvg || ls.avg) : null;
     if (S.basis === "list" && lv) return { v: lv, how: "호가 평균 " + fd(ls.date) };
+    if (S.basis === "min") { const lm = latest(S.listings.filter(l => l.complex === tg.id && l.min)); if (lm) return { v: lm.min, how: "매물 최저가 " + fd(lm.date) }; }
     if (tr) return { v: tr.price, how: "실거래 " + fd(tr.date) + (/직거래/.test(tr.source || "") ? " · 직거래" : "") };
     if (lv) return { v: lv, how: "호가 평균 " + fd(ls.date) };
     return null;
@@ -573,7 +577,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     $("#kAsk").textContent = l ? won(l.avg) : "–";
     $("#kAskSub").textContent = l ? `${l.pyCount ?? "–"}건 · ${fd(l.date)}${last ? " · 실거래보다 " + sgn(l.avg - last.price) : ""}` : "기록 대기";
     const gs = gapList();
-    if (gs.length) { const m = gs.reduce((a, b) => Math.abs(a.gap) < Math.abs(b.gap) ? a : b); $("#kGap").textContent = sgn(m.gap); $("#kGapSub").textContent = m.name + " · " + (S.basis === "list" ? "호가 기준" : "실거래 기준"); }
+    if (gs.length) { const m = gs.reduce((a, b) => Math.abs(a.gap) < Math.abs(b.gap) ? a : b); $("#kGap").textContent = sgn(m.gap); $("#kGapSub").textContent = m.name + " · " + (S.basis === "list" ? "호가 기준" : S.basis === "min" ? "최저가 기준" : "실거래 기준"); }
     else { $("#kGap").textContent = "–"; $("#kGapSub").textContent = "관심 단지 데이터 대기"; }
   }
   function renderTrades() {
