@@ -310,6 +310,9 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .grow .need .nf{color:var(--sub);font-size:12.5px}
 #gap .seg button{white-space:nowrap;padding:8px 12px}
 .totall{font-size:15px;font-weight:500;color:var(--sub);letter-spacing:0;white-space:nowrap}
+.tag-ok,.tag-ng,.tag-yr{font-style:normal;font-size:11px;font-weight:700;border-radius:999px;padding:2px 7px;margin-left:6px;vertical-align:1px;white-space:nowrap}
+.tag-ok{color:#1d7a46;background:#e3f4ea}.tag-ng{color:#b5321f;background:#fbe7e3}.tag-yr{color:var(--sub);background:var(--tint);margin:0 6px 0 0}
+.permo{display:block;font-size:11.5px;color:var(--faint);text-align:right}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -742,7 +745,9 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     }
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
     const st = $("#aStale"); st.hidden = days < 45; st.textContent = `노션 저축 기록이 ${fd(A.asOf)} 이후 업데이트되지 않았어요. 노션에 기록을 이어서 입력하면 다음 날 아침 자동으로 반영돼요.`;
-    const F = A.fixed || [], ft = F.reduce((s, f) => s + (f.amount || 0), 0), miss = F.filter(f => f.amount == null).length;
+    const F = (A.fixed || []).map(f => ({ ...f, yearly: f.basis === "년별", m: f.amount == null ? null : f.basis === "년별" ? f.amount / 12 : f.amount }));
+    const ft = F.reduce((s, f) => s + (f.m || 0), 0), miss = F.filter(f => f.amount == null).length;
+    const ftM = F.filter(f => !f.yearly).reduce((s, f) => s + (f.amount || 0), 0), ftY = F.filter(f => f.yearly).reduce((s, f) => s + (f.amount || 0), 0), ftYear = ftM * 12 + ftY;
     const bo = a => a.bank ? `${a.bank}${a.owner ? `(${a.owner})` : ""}` : (a.owner || "");
     const accRow = (a, nm, sub, gi) => { const main = sub ? (bo(a) || nm) : nm; const extra = sub ? (nm && nm !== a.owner ? nm : "") : bo(a); const note = [extra, a.avail === "Y" ? "바로 사용" : ""].filter(Boolean).join(" · ");
       return `<tr${sub ? ` class="asub" data-p="${gi}"${OPEN_G.has(gi) ? "" : " hidden"}` : ""}><td><div class="an">${esc(main)}${a.pending ? `<span class="tag-pend">반영 대기 ${a.pending > 0 ? "+" : "-"}${Math.abs(a.pending).toLocaleString("ko-KR")}원</span>` : ""}</div>${note ? `<div class="ab">${esc(note)}</div>` : ""}</td><td class="r num">${sub ? "" : "<b>"}${W(a.balance)}${sub ? "" : "</b>"}</td><td class="r num" style="color:var(--faint)">${(a.balance / tot * 100).toFixed(1)}%</td></tr>`; };
@@ -762,14 +767,14 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const grpHTML = (list, pfx, emptyMsg, deep) => {
       if (!list.length) return `<div class="empty">${emptyMsg}</div>`;
       const G = {}; list.forEach(f => (G[f.category || "기타"] ||= []).push(f));
-      return Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => b[2] - a[2]).map(([g, arr, sum]) => {
+      return Object.entries(G).map(([g, arr]) => [g, arr, arr.reduce((s, f) => s + ((f.m ?? f.amount) || 0), 0)]).sort((a, b) => b[2] - a[2]).map(([g, arr, sum]) => {
         const k = pfx + g, op = OPEN_F.has(k);
-        const item = (f, label) => `<div class="fitem"><span>${esc(label)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : CW(f.amount)}</span></div>`;
+        const item = (f, label) => `<div class="fitem"><span>${esc(label)}${f.until ? `<small>${esc(ym(f.until))}까지</small>` : ""}</span><span class="num ${f.amount == null ? "miss" : ""}">${f.amount == null ? "금액 미입력" : f.yearly ? `<em class="tag-yr">연납</em>${CW(f.amount)}<small class="permo">월 ${CW(f.m)}</small>` : CW(f.amount)}</span></div>`;
         const who = f => { const t = String(f.name).split(/[\s_]+/); return t.length > 1 && PEOPLE.has(t[0]) ? t[0] : null; };
         let body;
         if (arr.some(who)) {
           const P = {}; arr.forEach(f => (P[who(f) || "공통"] ||= []).push(f));
-          const PL = Object.entries(P).map(([p, a]) => [p, a, a.reduce((s, f) => s + (f.amount || 0), 0)]).sort((a, b) => (a[0] === "공통") - (b[0] === "공통") || b[2] - a[2]);
+          const PL = Object.entries(P).map(([p, a]) => [p, a, a.reduce((s, f) => s + ((f.m ?? f.amount) || 0), 0)]).sort((a, b) => (a[0] === "공통") - (b[0] === "공통") || b[2] - a[2]);
           body = !deep ? PL.map(([p, a, s]) => `<div class="fitem"><span>${esc(p)}</span><span class="num">${CW(s)}</span></div>`).join("") : PL.map(([p, a, s]) => {
             const k2 = k + "|" + p, o2 = OPEN_F.has(k2);
             return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(p)} <small>${a.length}건</small></span><span class="num">${CW(s)}</span></div>${o2 ? a.map(f => item(f, who(f) ? String(f.name).slice(p.length).replace(/^[\s_]+/, "") : f.name)).join("") : ""}</div>`;
@@ -808,11 +813,13 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const M = A.monthly || null, mLbl = M && M.ym ? `${+M.ym.slice(5, 7)}월` : "지난달";
     const INC = (A.income || []).filter(x => !x.until || x.until >= nowYM).map(x => x.name === "이현영" && M && M.salary != null ? { ...x, amount: M.salary, until: null } : x), it = INC.reduce((s, x) => s + (x.amount || 0), 0);
     const loanAmt = M && M.loan != null ? Math.abs(M.loan) : null, costT = ft + (loanAmt || 0) + (M && M.cards ? M.cards.reduce((s, c) => s + Math.abs(c.amount || 0), 0) : 0);
-    const FG = {}; F.forEach(f => (FG[f.category || "기타"] ||= 0, FG[f.category || "기타"] += f.amount || 0));
+    const FG = {}; F.forEach(f => (FG[f.category || "기타"] ||= 0, FG[f.category || "기타"] += f.m || 0));
     const cgrp = (k, title, sum, cnt, body) => { const op = OPEN_F.has(k); return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(title)} <small>${cnt}건 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${sum == null ? "–" : CW(sum)}</span></div>${op ? body : ""}</div>`; };
     const CARDS = M && M.cards ? M.cards : [], cardT = CARDS.reduce((s, c) => s + Math.abs(c.amount || 0), 0);
+    const CP = (M && M.cardPerf) || [], perfOf = c => CP.find(p => p.card === c.card);
+    const perfTag = (amt, target) => amt >= target ? `<em class="tag-ok">실적충족</em>` : `<em class="tag-ng">실적미충족</em>`;
     const cardBody = CARDS.length ? CARDS.map(c => { const k2 = "m:card|" + c.card, o2 = OPEN_F.has(k2);
-      return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(c.card)} <small>${(c.items || []).length}건</small></span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
+      return `<div class="fsub${o2 ? " open" : ""}"><div class="fgh fsh" data-fg="${esc(k2)}" tabindex="0" role="button" aria-expanded="${o2}"><span><span class="chev">›</span>${esc(perfOf(c) ? perfOf(c).name : c.card)} <small>${(c.items || []).length}건</small>${perfOf(c) ? perfTag(Math.abs(c.amount || 0), perfOf(c).target) : ""}</span><span class="num">${CW(Math.abs(c.amount || 0))}</span></div>${o2 ? (c.items || []).map(x => `<div class="fitem"><span>${esc(String(x.date).slice(5).replace("-", "/"))} · ${esc(x.name || "")}</span><span class="num">${CW(Math.abs(x.amount))}</span></div>`).join("") : ""}</div>`; }).join("") : `<div class="fitem"><span>${mLbl} 카드 결제 내역이 없어요</span><span></span></div>`;
     const SV = M && M.savings ? M.savings : null, sgnW = v => (v > 0 ? "+" : v < 0 ? "-" : "") + CW(Math.abs(v));
     const savHTML = !SV ? ph("곧 연결돼요", "저축액 계산 기준을 정하면 여기에 월별로 보여 드려요.") : `<div class="savbig"><b class="num ${SV.amount < 0 ? "down" : "up"}">${sgnW(SV.amount)}</b><span class="num">(${String(SV.year).slice(2)}년 평균 ${sgnW(SV.avg)})</span></div><p class="note" style="margin:4px 0 10px">공금·적금 통장의 전월 대비 증가액이에요. 예금으로 옮기거나 예금에서 들어온 돈은 계산에서 뺐어요.</p>`
       + cgrp("m:sav", `${SV.year}년 월별 저축`, null, (SV.months || []).length, (SV.months || []).map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월</span><span class="num ${x.amount < 0 ? "down" : ""}">${sgnW(x.amount)}</span></div>`).join(""));
@@ -824,10 +831,17 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
         <div><div class="sh"><h2>월별 비용</h2><span class="src num">${mLbl} 기준 · 합계 <b style="color:var(--ink)">${CW(costT)}</b></span></div>${costHTML}</div>
         <div><div class="sh"><h2>월별 저축</h2><span class="src num">${SV ? `${mLbl} 기준` : "준비 중"}</span></div>${savHTML}</div>
       </section>
+      ${CP.length ? `<section>
+        <div class="sh"><h2>카드 실적</h2><span class="src">결제 금액 기준 · ${esc(String((CP[0].months || []).slice(-1)[0]?.ym || "").slice(0, 4))}년</span></div>
+        <div class="perf">${CP.map(p => { const ms = (p.months || []).slice().reverse(), ok = ms.filter(x => x.amount >= p.target).length, last = ms[0];
+          const k = "p:" + p.card, op = OPEN_F.has(k);
+          return `<div class="fgroup${op ? " open" : ""}"><div class="fgh" data-fg="${esc(k)}" tabindex="0" role="button" aria-expanded="${op}"><span><span class="chev">›</span>${esc(p.name)} <small>기준 ${CW(p.target)} · ${ms.length}개월 중 ${ok}개월 충족 · ${op ? "접기" : "상세 보기"}</small></span><span class="num">${last ? `${+last.ym.slice(5)}월 ${CW(last.amount)}${perfTag(last.amount, p.target)}` : "–"}</span></div>${op ? ms.map(x => `<div class="fitem"><span>${+x.ym.slice(5)}월 결제</span><span class="num">${CW(x.amount)}${perfTag(x.amount, p.target)}</span></div>`).join("") : ""}</div>`; }).join("")}</div>
+        <p class="note" style="margin-top:8px">통장에서 빠져나간 카드 결제 금액(전월 이용분)으로 판단해요. 카드사가 실적에서 빼는 항목(연회비·할부이자 등)은 반영되지 않아요.</p>
+      </section>` : ""}
       <section>
         <div class="sh"><h2>비용</h2><span class="src">노션 고정비 · 여행비 기준</span></div>
         <div class="two">
-          <div><div class="sh"><h3>고정비</h3><span class="src num ctot">연 총액 <b>${ft ? CW(ft * 12) : "–"}</b></span></div><div class="csub"><span>월별 고정비 상세 내역</span><span class="num">월 합계 ${ft ? CW(ft) : "–"} × 12개월${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
+          <div><div class="sh"><h3>고정비</h3><span class="src num ctot">연 총액 <b>${ftYear ? CW(ftYear) : "–"}</b></span></div><div class="csub"><span>고정비 상세 내역</span><span class="num">월납 ${CW(ftM)} × 12개월${ftY ? ` + 연납 ${CW(ftY)}` : ""}${miss ? ` · ${miss}개 미입력` : ""}</span></div>${fixedDeep}</div>
           <div><div class="sh"><h3>${curY}년 여행비</h3><span class="src num ctot">${TR.length ? `${TR.length}건 · 합계${trEst ? "(예상 포함)" : ""} <b>${CW(trt)}</b>` : "준비 중"}</span></div>${travelHTML}</div>
         </div>
       </section>
