@@ -309,6 +309,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
 .grow .need{order:4}
 .grow .need .nf{color:var(--sub);font-size:12.5px}
 #gap .seg button{white-space:nowrap;padding:8px 12px}
+.totall{font-size:15px;font-weight:500;color:var(--sub);letter-spacing:0;white-space:nowrap}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 </head>
@@ -717,13 +718,15 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
     const dep = accs.reduce((s, a) => s + a.balance, 0), stk = stocks.reduce((s, x) => s + (x.value || 0), 0), tot = dep + stk;
     const avail = accs.filter(a => a.avail === "Y").reduce((s, a) => s + a.balance, 0) + stk;
     const W = v => won(v / 10000); // 원 → 만원 표기
-    $("#aTotal").innerHTML = esc(W(tot)) + "<small>원</small>";
-    $("#aTotalSub").textContent = `${fd(A.asOf)} 기준 · 통장 ${accs.length}개`;
+    const DEBT = 70000000, net = tot - DEBT; // 2027년 8월 상환 예정 대출
+    const Wm = v => W(v).replace(/억 ([\d,]+)$/, "억 $1만");
+    $("#aTotal").innerHTML = esc(Wm(net)) + `<small>원</small> <span class="totall">(전체 ${esc(Wm(tot))}원)</span>`;
+    $("#aTotalSub").textContent = `${fd(A.asOf)} 기준 · 통장 ${accs.length}개 · 27년 8월 상환할 대출 7,000만원 제외`;
     const owners = {}; accs.forEach(a => owners[a.owner || "통장 미지정"] = (owners[a.owner || "통장 미지정"] || 0) + a.balance);
     $("#aSplit").innerHTML = `<div class="r2"><span>예·적금</span><b class="num">${W(dep)}</b></div>`
       + Object.entries(owners).sort((a, b) => b[1] - a[1]).map(([k, v]) => `<div class="r2"><span>└ ${esc(k)} 명의</span><span class="num">${W(v)}</span></div>`).join("")
       + (() => {
-        const GOAL = 250000000, rate = Math.min(tot / GOAL * 100, 100), left = Math.max(GOAL - tot, 0);
+        const GOAL = 250000000, rate = Math.max(0, Math.min(net / GOAL * 100, 100)), left = Math.max(GOAL - net, 0);
         const d0 = new Date(A.asOf || Date.now()), mLeft = Math.max((2030 - d0.getFullYear()) * 12 + (12 - (d0.getMonth() + 1)), 1);
         return `<div class="goalhd"><span>2030년 목표 <b>2.5억</b></span><b class="num goalpct">${rate.toFixed(1)}%</b></div>`
           + `<div class="availbar"><span style="width:${rate.toFixed(1)}%"></span><span style="flex:1"></span></div>`
@@ -734,7 +737,7 @@ footer{border-top:1px solid var(--line);padding-block:28px 48px;color:var(--fain
       const PR = loanByYear(A.mortgage), lt = ly.change + (PR[ly.year] || 0);
       $("#aYear").innerHTML = `<span class="${ly.change >= 0 ? "up" : "down"}">${esc(sgn(ly.change / 10000))}</span><small>${ly.year}년${A.asOf && A.asOf.startsWith(String(ly.year)) && A.asOf.slice(5, 7) !== "12" ? " (" + (+A.asOf.slice(5, 7)) + "월까지)" : ""}</small>`;
       const prev = Y[Y.length - 2];
-      $("#aYearSub").textContent = `원금상환 ${sgn((PR[ly.year] || 0) / 10000)} 더하면 합계 ${sgn(lt / 10000)}` + (prev ? ` · ${prev.year}년 자산 증감 ${sgn(prev.change / 10000)}` : "");
+      $("#aYearSub").textContent = `원금상환 ${sgn((PR[ly.year] || 0) / 10000)} 더하면 합계 ${sgn(lt / 10000).replace(/억 ([\d,]+)$/, "억 $1만")}` + (prev ? ` · ${prev.year}년 자산 증감 ${sgn(prev.change / 10000)}` : "");
       yearBars($("#yearChart"), Y, PR);
     }
     const days = (Date.now() - Date.parse(A.asOf)) / 864e5;
